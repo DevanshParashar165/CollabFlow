@@ -6,6 +6,8 @@ import routes from './routes/index.js';
 import notFoundHandler from './middleware/notFoundHandler.js';
 import errorHandler from './middleware/errorHandler.js';
 import logger from './utils/logger.js';
+import morgan from 'morgan';
+import helmet from 'helmet';
 
 // Initialize Express application
 const app = express();
@@ -18,6 +20,10 @@ app.use(
   })
 );
 
+if (!environment.isDevelopment) {
+  app.use(morgan('dev'));
+}
+app.use(helmet())
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
