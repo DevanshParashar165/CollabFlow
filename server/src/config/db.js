@@ -1,6 +1,6 @@
-const mongoose = require('mongoose');
-const environment = require('./environment');
-const logger = require('../utils/logger');
+import mongoose from 'mongoose';
+import environment from './environment.js';
+import logger from '../utils/logger.js';
 
 /**
  * Connect to MongoDB database using Mongoose.
@@ -26,4 +26,5 @@ const connectDB = async () => {
   });
 };
 
-module.exports = connectDB;
+export { connectDB };
+export default connectDB;

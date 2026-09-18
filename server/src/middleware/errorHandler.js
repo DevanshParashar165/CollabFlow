@@ -1,11 +1,11 @@
-const environment = require('../config/environment');
-const logger = require('../utils/logger');
+import environment from '../config/environment.js';
+import logger from '../utils/logger.js';
 
 /**
  * Global centralized error handler.
  */
 // eslint-disable-next-line no-unused-vars
-const errorHandler = (err, req, res, next) => {
+export const errorHandler = (err, req, res, next) => {
   const statusCode = err.statusCode || (res.statusCode === 200 ? 500 : res.statusCode);
   
   logger.error(`[${req.method}] ${req.originalUrl} - ${err.message}`);
@@ -17,4 +17,4 @@ const errorHandler = (err, req, res, next) => {
   });
 };
 
-module.exports = errorHandler;
+export default errorHandler;

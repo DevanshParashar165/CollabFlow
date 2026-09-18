@@ -17,6 +17,7 @@
 
 ### Server (Backend)
 - **Runtime & Framework**: [Node.js](https://nodejs.org/), [Express 5](https://expressjs.com/)
+- **Module System**: JavaScript ES Modules (`"type": "module"`)
 - **Database & ODM**: [MongoDB](https://www.mongodb.com/) via [Mongoose](https://mongoosejs.com/)
 - **Real-Time Engine**: [Socket.IO](https://socket.io/) (HTTP server integration)
 - **Security & Authentication**: `bcrypt`, `jsonwebtoken` (JWT), `cookie-parser`, `cors`

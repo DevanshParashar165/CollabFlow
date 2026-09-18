@@ -33,7 +33,7 @@ export default function Navbar() {
             Architecture
           </a>
           <a
-            href="https://github.com"
+            href="https://github.com/DevanshParashar165/CollabFlow"
             target="_blank"
             rel="noopener noreferrer"
             className="text-slate-400 hover:text-slate-200 transition-colors duration-200"

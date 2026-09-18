@@ -2,7 +2,7 @@
  * Health check controller.
  * Returns operational status, uptime, and timestamp.
  */
-const getHealth = (req, res) => {
+export const getHealth = (req, res) => {
   res.status(200).json({
     status: 'ok',
     message: 'CollabFlow API is healthy and operational',
@@ -12,6 +12,6 @@ const getHealth = (req, res) => {
   });
 };
 
-module.exports = {
+export default {
   getHealth,
 };

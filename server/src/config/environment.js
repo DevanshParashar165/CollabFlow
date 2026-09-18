@@ -13,4 +13,5 @@ const environment = {
   isProduction: process.env.NODE_ENV === 'production',
 };
 
-module.exports = environment;
+export { environment };
+export default environment;

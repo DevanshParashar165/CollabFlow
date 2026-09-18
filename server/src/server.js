@@ -1,11 +1,11 @@
-require('dotenv').config();
+import 'dotenv/config';
 
-const http = require('http');
-const app = require('./app');
-const environment = require('./config/environment');
-const connectDB = require('./config/db');
-const { initSocket } = require('./sockets');
-const logger = require('./utils/logger');
+import http from 'http';
+import app from './app.js';
+import environment from './config/environment.js';
+import connectDB from './config/db.js';
+import { initSocket } from './sockets/index.js';
+import logger from './utils/logger.js';
 
 // Create HTTP server
 const server = http.createServer(app);

@@ -1,14 +1,11 @@
-const { Server } = require('socket.io');
-const environment = require('../config/environment');
-const logger = require('../utils/logger');
+import { Server } from 'socket.io';
+import environment from '../config/environment.js';
+import logger from '../utils/logger.js';
 
 let io = null;
 
-/**
- * Initialize Socket.IO with HTTP server instance.
- * @param {import('http').Server} httpServer
- */
-const initSocket = (httpServer) => {
+
+export const initSocket = (httpServer) => {
   io = new Server(httpServer, {
     cors: {
       origin: environment.clientUrl,
@@ -31,14 +28,14 @@ const initSocket = (httpServer) => {
 /**
  * Get active Socket.IO server instance.
  */
-const getIO = () => {
+export const getIO = () => {
   if (!io) {
     throw new Error('Socket.io has not been initialized. Call initSocket first.');
   }
   return io;
 };
 
-module.exports = {
+export default {
   initSocket,
   getIO,
 };

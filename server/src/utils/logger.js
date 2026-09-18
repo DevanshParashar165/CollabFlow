@@ -18,4 +18,5 @@ const logger = {
   },
 };
 
-module.exports = logger;
+export { logger };
+export default logger;

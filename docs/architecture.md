@@ -51,7 +51,7 @@ This document details the architectural foundation established for CollabFlow, c
 ### 2.2 Backend
 | Technology | Role | Rationale |
 | :--- | :--- | :--- |
-| **Node.js** | Runtime Environment | High-throughput, event-driven asynchronous runtime |
+| **Node.js (ESM)** | Runtime Environment | High-throughput, asynchronous runtime using native ES Modules (`"type": "module"`) |
 | **Express 5** | Web Framework | Lightweight, battle-tested HTTP routing and middleware framework |
 | **Socket.IO** | Real-Time Engine | Event-driven bidirectional communication for collaborative events |
 | **MongoDB & Mongoose** | Database & ODM | Schema-based document modeling with indexing and validation |
