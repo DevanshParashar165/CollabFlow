@@ -13,6 +13,11 @@ export const ROUTES = {
   LOGIN: '/login',
   REGISTER: '/register',
   DASHBOARD: '/dashboard',
+  WORKSPACES: '/workspaces',
+  WORKSPACE_DETAIL: '/workspaces/:workspaceId',
+  SUPERADMIN: '/superadmin',
+  SUPERADMIN_USERS: '/superadmin/users',
+  SUPERADMIN_WORKSPACES: '/superadmin/workspaces',
   NOT_FOUND: '*',
 };
 
@@ -23,4 +28,10 @@ export const API_ENDPOINTS = {
   AUTH_LOGOUT: '/auth/logout',
   AUTH_ME: '/auth/me',
   AUTH_ADMIN_TEST: '/auth/admin-test',
+  WORKSPACES: '/workspaces',
+  WORKSPACE_BY_ID: (id) => `/workspaces/${id}`,
+  WORKSPACE_MEMBERS: (id) => `/workspaces/${id}/members`,
+  WORKSPACE_MEMBER_BY_ID: (workspaceId, userId) => `/workspaces/${workspaceId}/members/${userId}`,
+  SUPERADMIN_USERS: '/superadmin/users',
+  SUPERADMIN_WORKSPACES: '/superadmin/workspaces',
 };

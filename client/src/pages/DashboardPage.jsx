@@ -43,16 +43,11 @@ export default function DashboardPage() {
   // Helper for role badge color styling
   const getRoleBadgeStyle = (role) => {
     switch (role) {
-      case 'OWNER':
-        return 'bg-amber-500/10 text-amber-400 border-amber-500/20';
-      case 'ADMIN':
+      case 'SUPERADMIN':
         return 'bg-purple-500/10 text-purple-400 border-purple-500/20';
-      case 'MEMBER':
-        return 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20';
-      case 'VIEWER':
-        return 'bg-slate-500/10 text-slate-400 border-slate-500/20';
+      case 'USER':
       default:
-        return 'bg-slate-500/10 text-slate-400 border-slate-500/20';
+        return 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20';
     }
   };
 
@@ -84,10 +79,10 @@ export default function DashboardPage() {
                 <span
                   id="user-role-badge"
                   className={`text-xs px-3 py-1 rounded-full font-semibold border ${getRoleBadgeStyle(
-                    user?.role
+                    user?.platformRole
                   )}`}
                 >
-                  {user?.role || 'MEMBER'}
+                  {user?.platformRole || 'USER'}
                 </span>
               </div>
               <p className="text-slate-400 text-sm mt-1">{user?.email}</p>
@@ -145,8 +140,8 @@ export default function DashboardPage() {
               <span className="text-emerald-400 font-medium text-xs">Secure / Inaccessible to JS</span>
             </div>
             <div className="flex justify-between py-2">
-              <span className="text-slate-400">Assigned Role</span>
-              <span className="text-indigo-400 font-semibold">{user?.role}</span>
+              <span className="text-slate-400">Platform Role</span>
+              <span className="text-indigo-400 font-semibold">{user?.platformRole || 'USER'}</span>
             </div>
           </div>
         </div>
@@ -166,8 +161,8 @@ export default function DashboardPage() {
           </div>
 
           <p className="text-xs text-slate-400 leading-relaxed">
-            All self-registered users receive the <strong className="text-slate-200">MEMBER</strong> role by default.
-            CollabFlow strips and discards any client-supplied role attributes during registration, preventing users from granting themselves elevated privileges.
+            All self-registered users receive the <strong className="text-slate-200">USER</strong> platform role by default.
+            CollabFlow ignores any client-supplied platform role during registration, preventing users from granting themselves elevated privileges.
           </p>
 
           <div className="bg-slate-950/60 rounded-xl p-3 border border-slate-800 text-xs text-slate-300">
@@ -253,7 +248,7 @@ export default function DashboardPage() {
               <p className="mt-0.5 text-xs opacity-90">{testStatus.result}</p>
               {testStatus.error && (
                 <p className="mt-1 text-[11px] text-amber-200/80">
-                  Expected outcome: The backend <code className="font-mono text-xs">authorizeRoles</code> middleware successfully verified that your role ({user?.role}) does not have administrative rights, protecting the route.
+                  Expected outcome: The backend <code className="font-mono text-xs">authorizeRoles</code> middleware successfully verified that your role ({user?.platformRole}) does not have administrative rights, protecting the route.
                 </p>
               )}
             </div>

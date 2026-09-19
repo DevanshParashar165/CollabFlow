@@ -1,8 +1,8 @@
-import User, { USER_ROLES } from '../models/User.js';
+import User, { PLATFORM_ROLES } from '../models/User.js';
 import ApiError from '../utils/ApiError.js';
 
 /**
- * Register a new user with standard MEMBER role.
+ * Register a new user with the standard USER platform role.
  */
 export const registerUser = async ({ name, email, password }) => {
   const normalizedEmail = email.trim().toLowerCase();
@@ -13,12 +13,12 @@ export const registerUser = async ({ name, email, password }) => {
     throw new ApiError(409, 'An account with this email already exists');
   }
 
-  // Security: Explicitly enforce MEMBER role for all self-registered users.
+  // Security: Explicitly enforce USER platform role for all self-registered users.
   const user = await User.create({
     name: name.trim(),
     email: normalizedEmail,
     password,
-    role: USER_ROLES.MEMBER,
+    platformRole: PLATFORM_ROLES.USER,
   });
 
   return user;

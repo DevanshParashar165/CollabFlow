@@ -28,12 +28,12 @@ router.post('/logout', logout);
 router.get('/me', authMiddleware, getMe);
 
 /**
- * Role-Restricted Test Route (Requires OWNER or ADMIN role)
+ * Role-Restricted Test Route (Requires SUPERADMIN platform role)
  */
 router.get(
   '/admin-test',
   authMiddleware,
-  authorizeRoles('OWNER', 'ADMIN'),
+  authorizeRoles('SUPERADMIN'),
   testAdminRole
 );
 

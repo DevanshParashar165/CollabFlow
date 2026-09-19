@@ -2,15 +2,15 @@
  * Comprehensive Automated Authentication & Authorization Verification Suite
  *
  * Tests every required scenario:
- * 1. Register new user -> 201 Created + HTTP-only cookie + role: "MEMBER"
- * 2. Attempt privilege escalation -> client sends { role: "ADMIN" } -> backend still enforces role: "MEMBER"
+ * 1. Register new user -> 201 Created + HTTP-only cookie + platformRole: "USER"
+ * 2. Attempt privilege escalation -> client sends { platformRole: "SUPERADMIN" } -> backend still enforces platformRole: "USER"
  * 3. Duplicate email registration -> 409 Conflict
  * 4. Login with incorrect password -> 401 Unauthorized ("Invalid email or password")
  * 5. Login with non-existent email -> 401 Unauthorized (identical message to prevent enumeration)
  * 6. Login with correct credentials -> 200 OK + HTTP-only cookie
  * 7. GET /api/auth/me without cookie -> 401 Unauthorized
  * 8. GET /api/auth/me with valid cookie -> 200 OK + sanitized profile (no password hash)
- * 9. GET /api/auth/admin-test with MEMBER role -> 403 Forbidden ("Insufficient permissions")
+ * 9. GET /api/auth/admin-test with USER platformRole -> 403 Forbidden ("Insufficient permissions")
  * 10. POST /api/auth/logout -> 200 OK + cookie cleared
  * 11. GET /api/auth/me after logout -> 401 Unauthorized
  * 12. Input validation edge cases (invalid email, short password, empty fields)
@@ -21,7 +21,7 @@ import http from 'http';
 import assert from 'node:assert';
 import bcrypt from 'bcrypt';
 import app from '../src/app.js';
-import User, { USER_ROLES } from '../src/models/User.js';
+import User, { PLATFORM_ROLES } from '../src/models/User.js';
 import { generateToken, verifyToken, COOKIE_NAME } from '../src/utils/jwt.js';
 
 // In-memory test store to verify full HTTP request pipeline without requiring external MongoDB service
@@ -69,7 +69,7 @@ const setupMocks = () => {
       _id: id,
       name: doc.name,
       email: doc.email.toLowerCase(),
-      role: doc.role || USER_ROLES.MEMBER,
+      platformRole: doc.platformRole || PLATFORM_ROLES.USER,
       avatar: doc.avatar || '',
       passwordHash,
       createdAt: new Date().toISOString(),
@@ -79,7 +79,7 @@ const setupMocks = () => {
         _id: id,
         name: doc.name,
         email: doc.email.toLowerCase(),
-        role: doc.role || USER_ROLES.MEMBER,
+        platformRole: doc.platformRole || PLATFORM_ROLES.USER,
         avatar: doc.avatar || '',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -172,7 +172,7 @@ const runTests = async () => {
   });
 
   // 4. Registration: Valid user
-  await test('POST /api/auth/register creates new user with MEMBER role and sets cookie', async () => {
+  await test('POST /api/auth/register creates new user with USER platformRole and sets cookie', async () => {
     const res = await fetch(`${baseUrl}/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -191,12 +191,12 @@ const runTests = async () => {
     assert.strictEqual(data.status, 'success');
     assert.strictEqual(data.data.user.name, 'Alice Smith');
     assert.strictEqual(data.data.user.email, 'alice@collabflow.io');
-    assert.strictEqual(data.data.user.role, 'MEMBER');
+    assert.strictEqual(data.data.user.platformRole, 'USER');
     assert.strictEqual(data.data.user.password, undefined, 'Password hash must NEVER be in response');
   });
 
-  // 5. Privilege Escalation Prevention: Attempt to inject role: "OWNER"
-  await test('POST /api/auth/register rejects client-provided role and enforces MEMBER', async () => {
+  // 5. Privilege Escalation Prevention: Attempt to inject platformRole: "SUPERADMIN"
+  await test('POST /api/auth/register rejects client-provided platformRole and enforces USER', async () => {
     const res = await fetch(`${baseUrl}/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -204,16 +204,17 @@ const runTests = async () => {
         name: 'Attacker Bob',
         email: 'bob@hacker.io',
         password: 'Password123',
-        role: 'OWNER', // Malicious attempt to escalate privilege
+        platformRole: 'SUPERADMIN', // Malicious attempt to escalate privilege
+        role: 'OWNER',
       }),
     });
 
     assert.strictEqual(res.status, 201);
     const data = await res.json();
     assert.strictEqual(
-      data.data.user.role,
-      'MEMBER',
-      'Backend MUST neutralize role parameter and enforce MEMBER role'
+      data.data.user.platformRole,
+      'USER',
+      'Backend MUST neutralize platformRole parameter and enforce USER platformRole'
     );
   });
 
@@ -309,12 +310,12 @@ const runTests = async () => {
     assert.strictEqual(data.status, 'success');
     assert.strictEqual(data.data.user.email, 'alice@collabflow.io');
     assert.strictEqual(data.data.user.name, 'Alice Smith');
-    assert.strictEqual(data.data.user.role, 'MEMBER');
+    assert.strictEqual(data.data.user.platformRole, 'USER');
     assert.strictEqual(data.data.user.password, undefined);
   });
 
-  // 13. Role-Based Authorization: MEMBER role accessing ADMIN route
-  await test('GET /api/auth/admin-test with MEMBER role returns 403 Forbidden', async () => {
+  // 13. Role-Based Authorization: USER platformRole accessing SUPERADMIN route
+  await test('GET /api/auth/admin-test with USER platformRole returns 403 Forbidden', async () => {
     const res = await fetch(`${baseUrl}/auth/admin-test`, {
       headers: { Cookie: authCookie },
     });
@@ -325,16 +326,15 @@ const runTests = async () => {
     assert.match(data.message, /lacks permission/i);
   });
 
-  // 14. Role-Based Authorization: ADMIN role accessing ADMIN route
-  await test('GET /api/auth/admin-test with ADMIN role returns 200 OK', async () => {
-    // Create an ADMIN user in test store
+  // 14. Role-Based Authorization: SUPERADMIN role accessing SUPERADMIN route
+  await test('GET /api/auth/admin-test with SUPERADMIN platformRole returns 200 OK', async () => {
     const adminUser = await User.create({
       name: 'System Admin',
       email: 'admin@collabflow.io',
       password: 'AdminPassword123',
-      role: USER_ROLES.ADMIN,
+      platformRole: PLATFORM_ROLES.SUPERADMIN,
     });
-    adminUser.role = USER_ROLES.ADMIN; // Directly set role in trusted context
+    adminUser.platformRole = PLATFORM_ROLES.SUPERADMIN;
 
     const adminToken = generateToken(adminUser._id);
     const adminCookie = `${COOKIE_NAME}=${adminToken}`;
@@ -346,30 +346,27 @@ const runTests = async () => {
     assert.strictEqual(res.status, 200);
     const data = await res.json();
     assert.strictEqual(data.status, 'success');
-    assert.strictEqual(data.data.role, 'ADMIN');
+    assert.strictEqual(data.data.platformRole, 'SUPERADMIN');
   });
 
-  // 15. Role-Based Authorization: OWNER role accessing ADMIN route
-  await test('GET /api/auth/admin-test with OWNER role returns 200 OK', async () => {
-    const ownerUser = await User.create({
-      name: 'Workspace Owner',
-      email: 'owner@collabflow.io',
-      password: 'OwnerPassword123',
-      role: USER_ROLES.OWNER,
+  // 15. Legacy role isolation: Setting obsolete role does not grant platform privilege
+  await test('GET /api/auth/admin-test with legacy role but platformRole: USER returns 403', async () => {
+    const legacyUser = await User.create({
+      name: 'Legacy User',
+      email: 'legacy@collabflow.io',
+      password: 'LegacyPassword123',
+      platformRole: PLATFORM_ROLES.USER,
+      role: 'ADMIN',
     });
-    ownerUser.role = USER_ROLES.OWNER;
 
-    const ownerToken = generateToken(ownerUser._id);
-    const ownerCookie = `${COOKIE_NAME}=${ownerToken}`;
+    const legacyToken = generateToken(legacyUser._id);
+    const legacyCookie = `${COOKIE_NAME}=${legacyToken}`;
 
     const res = await fetch(`${baseUrl}/auth/admin-test`, {
-      headers: { Cookie: ownerCookie },
+      headers: { Cookie: legacyCookie },
     });
 
-    assert.strictEqual(res.status, 200);
-    const data = await res.json();
-    assert.strictEqual(data.status, 'success');
-    assert.strictEqual(data.data.role, 'OWNER');
+    assert.strictEqual(res.status, 403);
   });
 
   // 16. Logout
@@ -409,10 +406,7 @@ const runTests = async () => {
   console.log(`==================================================\n`);
 
   server.close();
-
-  if (testsFailed > 0) {
-    process.exit(1);
-  }
+  process.exit(testsFailed > 0 ? 1 : 0);
 };
 
 runTests().catch((err) => {
