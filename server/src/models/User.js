@@ -1,11 +1,9 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcrypt';
 
-export const USER_ROLES = Object.freeze({
-  OWNER: 'OWNER',
-  ADMIN: 'ADMIN',
-  MEMBER: 'MEMBER',
-  VIEWER: 'VIEWER',
+export const PLATFORM_ROLES = Object.freeze({
+  USER: 'USER',
+  SUPERADMIN: 'SUPERADMIN',
 });
 
 const userSchema = new mongoose.Schema(
@@ -40,10 +38,10 @@ const userSchema = new mongoose.Schema(
       default: '',
       trim: true,
     },
-    role: {
+    platformRole: {
       type: String,
-      enum: Object.values(USER_ROLES),
-      default: USER_ROLES.MEMBER,
+      enum: Object.values(PLATFORM_ROLES),
+      default: PLATFORM_ROLES.USER,
     },
   },
   {

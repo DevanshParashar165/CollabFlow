@@ -3,7 +3,7 @@ import { API_ENDPOINTS } from '../../utils/constants';
 
 /**
  * Register a new user.
- * Note: Role is intentionally not accepted to prevent client privilege escalation.
+ * Note: platformRole is intentionally not accepted to prevent client privilege escalation.
  *
  * @param {object} userData
  * @param {string} userData.name
@@ -51,7 +51,7 @@ export const getMe = async () => {
 };
 
 /**
- * Test accessing role-restricted endpoint (OWNER or ADMIN only).
+ * Test accessing the platform-role-restricted endpoint (SUPERADMIN only).
  *
  * @returns {Promise<object>}
  */

@@ -69,7 +69,7 @@ export const getMe = (req, res) => {
 };
 
 /**
- * Verification endpoint protected by roleMiddleware (OWNER / ADMIN only).
+ * Verification endpoint protected by roleMiddleware (SUPERADMIN only).
  */
 export const testAdminRole = (req, res) => {
   res.status(200).json({
@@ -77,7 +77,7 @@ export const testAdminRole = (req, res) => {
     message: 'Authorized: You have accessed a role-restricted endpoint.',
     data: {
       userId: req.user._id,
-      role: req.user.role,
+      platformRole: req.user.platformRole,
     },
   });
 };

@@ -5,7 +5,7 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 /**
  * Validates user registration payload.
  * Enforces field presence, length limits, and email formatting.
- * Strictly ignores/removes any client-supplied role to prevent privilege escalation.
+ * Registration never accepts a client-supplied platform role, preventing privilege escalation.
  */
 export const validateRegister = (req, res, next) => {
   const { name, email, password } = req.body;

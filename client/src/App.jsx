@@ -6,9 +6,13 @@ import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
+import WorkspacesListPage from './pages/WorkspacesListPage';
+import WorkspaceDetailPage from './pages/WorkspaceDetailPage';
+import SuperAdminPage from './pages/SuperAdminPage';
 import NotFoundPage from './pages/NotFoundPage';
 import ProtectedRoute from './features/auth/components/ProtectedRoute';
 import PublicOnlyRoute from './features/auth/components/PublicOnlyRoute';
+import SuperAdminRoute from './features/auth/components/SuperAdminRoute';
 import { checkAuthStatus } from './features/auth/authSlice';
 
 export default function App() {
@@ -47,6 +51,35 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+
+        {/* Workspace routes */}
+        <Route
+          path="workspaces"
+          element={
+            <ProtectedRoute>
+              <WorkspacesListPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="workspaces/:workspaceId"
+          element={
+            <ProtectedRoute>
+              <WorkspaceDetailPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Superadmin routes */}
+        <Route
+          path="superadmin"
+          element={
+            <SuperAdminRoute>
+              <SuperAdminPage />
+            </SuperAdminRoute>
+          }
+        />
+
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>
