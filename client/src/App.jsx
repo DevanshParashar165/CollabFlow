@@ -10,6 +10,9 @@ import WorkspacesListPage from './pages/WorkspacesListPage';
 import WorkspaceDetailPage from './pages/WorkspaceDetailPage';
 import SuperAdminPage from './pages/SuperAdminPage';
 import NotFoundPage from './pages/NotFoundPage';
+import ProjectsListPage from './pages/ProjectsListPage';
+import ProjectDetailPage from './pages/ProjectDetailPage';
+import TaskDetailPage from './features/tasks/pages/TaskDetailPage';
 import ProtectedRoute from './features/auth/components/ProtectedRoute';
 import PublicOnlyRoute from './features/auth/components/PublicOnlyRoute';
 import SuperAdminRoute from './features/auth/components/SuperAdminRoute';
@@ -69,6 +72,9 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+        <Route path="workspaces/:workspaceId/projects" element={<ProtectedRoute><ProjectsListPage /></ProtectedRoute>} />
+        <Route path="workspaces/:workspaceId/projects/:projectId" element={<ProtectedRoute><ProjectDetailPage /></ProtectedRoute>} />
+  <Route path="workspaces/:workspaceId/projects/:projectId/tasks/:taskId" element={<ProtectedRoute><TaskDetailPage /></ProtectedRoute>} />
 
         {/* Superadmin routes */}
         <Route

@@ -130,7 +130,7 @@ export default function WorkspaceDetailPage() {
           <div className="bg-slate-900/60 backdrop-blur-md border border-slate-800/80 rounded-2xl p-6 mb-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-600 flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-indigo-500/25">
+                <div className="w-14 h-14 rounded-2xl bg-linear-to-tr from-indigo-600 to-violet-600 flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-indigo-500/25">
                   {currentWorkspace.name?.[0]?.toUpperCase() || 'W'}
                 </div>
                 <div>
@@ -154,6 +154,21 @@ export default function WorkspaceDetailPage() {
             {actionError}
           </div>
         )}
+
+        <div className="bg-slate-900/60 backdrop-blur-md border border-slate-800/80 rounded-2xl p-6 mb-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-semibold text-white">Projects</h2>
+              <p className="text-slate-500 text-xs mt-0.5">Plan and track work in this workspace</p>
+            </div>
+            <button
+              onClick={() => navigate(`/workspaces/${workspaceId}/projects`)}
+              className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-sm cursor-pointer"
+            >
+              View Projects
+            </button>
+          </div>
+        </div>
 
         {/* Members section */}
         <div className="bg-slate-900/60 backdrop-blur-md border border-slate-800/80 rounded-2xl p-6">

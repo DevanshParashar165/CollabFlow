@@ -1,0 +1,6 @@
+import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
+import activityService from './activityService';
+
+export const fetchTaskActivity = createAsyncThunk('activity/fetchTaskActivity', async ({ workspaceId, taskId }, { rejectWithValue }) => { try { return { key: `${workspaceId}:${taskId}`, ...(await activityService.listTaskActivity(workspaceId, taskId)) }; } catch (error) { return rejectWithValue(error.response?.data?.message || error.message || 'Request failed'); } });
+const slice = createSlice({ name: 'activity', initialState: { byTask: {}, loading: false, error: null }, reducers: {}, extraReducers: (builder) => builder.addCase(fetchTaskActivity.pending, (state) => { state.loading = true; state.error = null; }).addCase(fetchTaskActivity.fulfilled, (state, action) => { state.loading = false; state.byTask[action.payload.key] = action.payload; }).addCase(fetchTaskActivity.rejected, (state, action) => { state.loading = false; state.error = action.payload; }) });
+export default slice.reducer;

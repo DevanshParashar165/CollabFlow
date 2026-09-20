@@ -1,0 +1,3 @@
+export default function ActivityTimeline({ activities = [] }) {
+  return <div className="mt-4 space-y-3">{activities.length ? activities.map((item) => <div key={item._id} className="flex gap-3 text-sm"><span className="text-indigo-400">●</span><div><p className="text-slate-300"><strong>{item.actorId?.name || 'User'}</strong> {item.action.toLowerCase().replaceAll('_', ' ')}</p>{item.metadata?.oldStatus && <p className="text-xs text-slate-500">{item.metadata.oldStatus} → {item.metadata.newStatus}</p>}<p className="text-xs text-slate-600">{item.createdAt ? new Date(item.createdAt).toLocaleString() : ''}</p></div></div>) : <p className="text-slate-500 text-sm">No activity yet.</p>}</div>;
+}

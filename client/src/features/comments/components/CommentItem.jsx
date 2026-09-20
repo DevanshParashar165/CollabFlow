@@ -1,0 +1,7 @@
+import { useState } from 'react';
+
+export default function CommentItem({ comment, canModerate, isAuthor, onUpdate, onDelete }) {
+  const [editing, setEditing] = useState(false); const [content, setContent] = useState(comment.content);
+  const editable = canModerate || isAuthor;
+  return <div className="py-3 border-b border-slate-800 last:border-0"><div className="flex justify-between gap-3"><div><p className="text-sm text-white font-medium">{comment.userId?.name || 'User'}</p><p className="text-xs text-slate-600">{comment.createdAt ? new Date(comment.createdAt).toLocaleString() : ''}</p></div>{editable && <div className="flex gap-2"><button onClick={() => setEditing(!editing)} className="text-xs text-indigo-300 cursor-pointer">{editing ? 'Cancel' : 'Edit'}</button><button onClick={onDelete} className="text-xs text-red-400 cursor-pointer">Delete</button></div>}</div>{editing ? <div className="flex gap-2 mt-2"><input value={content} onChange={(event) => setContent(event.target.value)} maxLength={2000} className="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm" /><button onClick={() => { onUpdate(content); setEditing(false); }} className="text-xs text-indigo-300 cursor-pointer">Save</button></div> : <p className="text-slate-300 text-sm mt-2 whitespace-pre-wrap">{comment.content}</p>}</div>;
+}
