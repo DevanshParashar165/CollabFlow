@@ -32,6 +32,13 @@ export const API_ENDPOINTS = {
   WORKSPACE_BY_ID: (id) => `/workspaces/${id}`,
   WORKSPACE_MEMBERS: (id) => `/workspaces/${id}/members`,
   WORKSPACE_MEMBER_BY_ID: (workspaceId, userId) => `/workspaces/${workspaceId}/members/${userId}`,
+  PROJECTS: (workspaceId) => `/workspaces/${workspaceId}/projects`,
+  PROJECT_BY_ID: (workspaceId, projectId) => `/workspaces/${workspaceId}/projects/${projectId}`,
+  TASKS: (workspaceId, projectId) => `/workspaces/${workspaceId}/projects/${projectId}/tasks`,
+  TASK_BY_ID: (workspaceId, projectId, taskId) => `/workspaces/${workspaceId}/projects/${projectId}/tasks/${taskId}`,
+  COMMENTS: (workspaceId, taskId) => `/workspaces/${workspaceId}/tasks/${taskId}/comments`,
+  COMMENT_BY_ID: (workspaceId, taskId, commentId) => `/workspaces/${workspaceId}/tasks/${taskId}/comments/${commentId}`,
+  TASK_ACTIVITY: (workspaceId, taskId) => `/workspaces/${workspaceId}/tasks/${taskId}/activity`,
   SUPERADMIN_USERS: '/superadmin/users',
   SUPERADMIN_WORKSPACES: '/superadmin/workspaces',
 };
