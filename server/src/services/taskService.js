@@ -5,6 +5,8 @@ import WorkspaceMember from '../models/WorkspaceMember.js';
 import ApiError from '../utils/ApiError.js';
 import activityService from './activityService.js';
 import { actorPayload, emitWorkspaceEvent } from '../sockets/emitter.js';
+import { notifyTaskCreated, notifyTaskUpdated } from './notificationService.js';
+import logger from '../utils/logger.js';
 
 const ensureId = (value, label) => {
   if (!mongoose.Types.ObjectId.isValid(value)) throw new ApiError(400, `Invalid ${label} identifier`);
@@ -41,6 +43,12 @@ const findTask = async (workspaceId, projectId, taskId) => {
 export const createTask = async ({ workspaceId, projectId, title, description = '', status, priority, assignee, dueDate, userId, actor }) => {
   await getProjectInWorkspace(workspaceId, projectId);
   const validatedAssignee = await validateAssignee(workspaceId, assignee);
+  logger.debug('Task creation validated assignment', {
+    workspaceId: workspaceId?.toString?.() || workspaceId,
+    projectId: projectId?.toString?.() || projectId,
+    assigneeId: validatedAssignee?.toString?.() || validatedAssignee || null,
+    actorId: userId?.toString?.() || userId,
+  });
   const task = await Task.create({
     workspaceId,
     projectId,
@@ -52,8 +60,15 @@ export const createTask = async ({ workspaceId, projectId, title, description = 
     dueDate: dueDate || null,
     createdBy: userId,
   });
+  logger.debug('Task persisted before notification generation', {
+    taskId: task?._id?.toString?.() || task?._id,
+    workspaceId: task?.workspaceId?.toString?.() || task?.workspaceId,
+    projectId: task?.projectId?.toString?.() || task?.projectId,
+    assigneeId: task?.assignee?._id?.toString?.() || task?.assignee?.toString?.() || task?.assignee || null,
+  });
   await activityService.createActivity({ workspaceId, projectId, taskId: task._id, actorId: userId, action: 'TASK_CREATED', entityType: 'TASK', entityId: task._id });
   emitWorkspaceEvent(workspaceId, 'task:created', { taskId: task._id, projectId, workspaceId, title: task.title, status: task.status, priority: task.priority, updatedBy: actorPayload(actor || { _id: userId }) });
+  await notifyTaskCreated({ workspaceId, task, actorId: userId, actor });
   return findTask(workspaceId, projectId, task._id);
 };
 
@@ -87,6 +102,16 @@ export const updateTask = async (workspaceId, projectId, taskId, updates, actorI
     if (statusChanged) emitWorkspaceEvent(workspaceId, 'task:statusChanged', { taskId, projectId, workspaceId, oldStatus, newStatus: task.status, updatedBy });
     if (assigneeChanged) emitWorkspaceEvent(workspaceId, 'task:assigned', { taskId, projectId, workspaceId, previousAssignee: oldAssignee, newAssignee: task.assignee || null, updatedBy });
     if (!statusChanged && !assigneeChanged) emitWorkspaceEvent(workspaceId, 'task:updated', { taskId, projectId, workspaceId, title: task.title, description: task.description, priority: task.priority, dueDate: task.dueDate, updatedBy });
+    await notifyTaskUpdated({
+      workspaceId,
+      task,
+      oldStatus,
+      oldAssignee,
+      statusChanged,
+      assigneeChanged,
+      actorId,
+      actor,
+    });
   }
   return task;
 };

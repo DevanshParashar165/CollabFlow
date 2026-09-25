@@ -6,13 +6,15 @@
   "scripts": {
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
-    "test": "node scripts/verify-auth.js && node scripts/verify-phase3.js && node scripts/verify-project.js && node scripts/verify-task.js && node scripts/verify-phase43.js && node scripts/verify-phase44.js",
+    "test": "node scripts/verify-auth.js && node scripts/verify-phase3.js && node scripts/verify-project.js && node scripts/verify-task.js && node scripts/verify-phase43.js && node scripts/verify-phase44.js && node scripts/verify-phase51.js && node scripts/verify-phase52.js",
     "test:auth": "node scripts/verify-auth.js",
     "test:phase3": "node scripts/verify-phase3.js",
     "test:project": "node scripts/verify-project.js",
     "test:task": "node scripts/verify-task.js",
     "test:phase43": "node scripts/verify-phase43.js",
     "test:phase44": "node scripts/verify-phase44.js",
+    "test:phase51": "node scripts/verify-phase51.js",
+    "test:phase52": "node scripts/verify-phase52.js",
     "migrate:user-roles": "node scripts/migrateUserRoles.js",
     "bootstrap:superadmin": "node scripts/createSuperadmin.js"
   },

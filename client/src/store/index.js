@@ -7,6 +7,7 @@ import taskReducer from '../features/tasks/taskSlice';
 import commentReducer from '../features/comments/commentSlice';
 import activityReducer from '../features/activity/activitySlice';
 import socketReducer from '../features/socket/socketSlice';
+import notificationReducer from '../features/notifications/notificationSlice';
 
 export const store = configureStore({
   reducer: {
@@ -18,6 +19,7 @@ export const store = configureStore({
     comments: commentReducer,
     activity: activityReducer,
     socket: socketReducer,
+    notifications: notificationReducer,
   },
   devTools: import.meta.env.DEV,
 });

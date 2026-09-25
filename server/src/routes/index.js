@@ -7,6 +7,7 @@ import projectRoutes from './projectRoutes.js';
 import taskRoutes from './taskRoutes.js';
 import commentRoutes from './commentRoutes.js';
 import activityRoutes from './activityRoutes.js';
+import notificationRoutes from './notificationRoutes.js';
 
 const router = express.Router();
 
@@ -18,6 +19,7 @@ router.use('/workspaces', projectRoutes);
 router.use('/workspaces', taskRoutes);
 router.use('/workspaces', commentRoutes);
 router.use('/workspaces', activityRoutes);
+router.use('/notifications', notificationRoutes);
 router.use('/superadmin', superAdminRoutes);
 
 export default router;

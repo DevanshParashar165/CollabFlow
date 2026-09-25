@@ -4,6 +4,7 @@ import Task from "../models/Task.js";
 import activityService from "./activityService.js";
 import ApiError from "../utils/ApiError.js";
 import { actorPayload, emitWorkspaceEvent } from "../sockets/emitter.js";
+import { notifyCommentCreated } from "./notificationService.js";
 
 const ensureId = (value, label) => {
   if (!mongoose.Types.ObjectId.isValid(value))
@@ -71,6 +72,13 @@ export const createComment = async ({
     content: comment.content,
     author: actorPayload(actor || { _id: userId }),
     createdAt: comment.createdAt,
+  });
+  await notifyCommentCreated({
+    workspaceId,
+    task,
+    comment,
+    actorId: userId,
+    actor,
   });
   return Comment.findById(comment._id).populate("userId", "name avatar");
 };

@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { API_BASE_URL, API_ENDPOINTS } from '../utils/constants';
+import { API_BASE_URL, API_ENDPOINTS } from '../utils/constants.js';
 
 /**
  * Pre-configured Axios instance for CollabFlow API communication.
