@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { Routes, Route } from 'react-router-dom';
 import RootLayout from './layouts/RootLayout';
 import HomePage from './pages/HomePage';
@@ -17,14 +17,20 @@ import ProtectedRoute from './features/auth/components/ProtectedRoute';
 import PublicOnlyRoute from './features/auth/components/PublicOnlyRoute';
 import SuperAdminRoute from './features/auth/components/SuperAdminRoute';
 import { checkAuthStatus } from './features/auth/authSlice';
+import { disconnectSocket } from './socket/socket';
 
 export default function App() {
   const dispatch = useDispatch();
+  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
 
   // On application startup: hydrate auth state via HTTP-only cookie
   useEffect(() => {
     dispatch(checkAuthStatus());
   }, [dispatch]);
+
+  useEffect(() => {
+    if (!isAuthenticated) disconnectSocket();
+  }, [isAuthenticated]);
 
   return (
     <Routes>

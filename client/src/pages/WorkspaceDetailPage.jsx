@@ -9,6 +9,7 @@ import {
   removeMember,
   clearCurrentWorkspace,
 } from '../features/workspaces/workspaceSlice';
+import useWorkspaceSocket from '../hooks/useWorkspaceSocket';
 
 const ROLES = ['OWNER', 'ADMIN', 'MEMBER', 'VIEWER'];
 
@@ -24,6 +25,7 @@ const roleBadge = (role) => {
 
 export default function WorkspaceDetailPage() {
   const { workspaceId } = useParams();
+  useWorkspaceSocket(workspaceId);
   const dispatch = useDispatch();
   const navigate = useNavigate();
 

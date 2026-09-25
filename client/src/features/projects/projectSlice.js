@@ -36,6 +36,23 @@ const projectSlice = createSlice({
   reducers: {
     clearProjectError: (state) => { state.error = null; },
     clearCurrentProject: (state) => { state.currentProject = null; state.currentWorkspaceId = null; },
+    projectCreatedFromSocket: (state, action) => {
+      const { workspaceId, projectId, ...project } = action.payload;
+      const list = state.projectsByWorkspace[workspaceId] || [];
+      if (!list.some((item) => item._id === projectId)) list.unshift({ ...project, _id: projectId, workspaceId });
+      state.projectsByWorkspace[workspaceId] = list;
+    },
+    projectUpdatedFromSocket: (state, action) => {
+      const { workspaceId, projectId, ...changes } = action.payload;
+      const list = state.projectsByWorkspace[workspaceId] || [];
+      state.projectsByWorkspace[workspaceId] = list.map((item) => item._id === projectId ? { ...item, ...changes } : item);
+      if (state.currentProject?._id === projectId) state.currentProject = { ...state.currentProject, ...changes };
+    },
+    projectDeletedFromSocket: (state, action) => {
+      const { workspaceId, projectId } = action.payload;
+      state.projectsByWorkspace[workspaceId] = (state.projectsByWorkspace[workspaceId] || []).filter((item) => item._id !== projectId);
+      if (state.currentProject?._id === projectId) state.currentProject = null;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -63,5 +80,5 @@ const projectSlice = createSlice({
   },
 });
 
-export const { clearProjectError, clearCurrentProject } = projectSlice.actions;
+export const { clearProjectError, clearCurrentProject, projectCreatedFromSocket, projectUpdatedFromSocket, projectDeletedFromSocket } = projectSlice.actions;
 export default projectSlice.reducer;

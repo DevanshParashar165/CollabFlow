@@ -4,6 +4,7 @@ import Project from '../models/Project.js';
 import WorkspaceMember from '../models/WorkspaceMember.js';
 import ApiError from '../utils/ApiError.js';
 import activityService from './activityService.js';
+import { actorPayload, emitWorkspaceEvent } from '../sockets/emitter.js';
 
 const ensureId = (value, label) => {
   if (!mongoose.Types.ObjectId.isValid(value)) throw new ApiError(400, `Invalid ${label} identifier`);
@@ -37,7 +38,7 @@ const findTask = async (workspaceId, projectId, taskId) => {
   return task;
 };
 
-export const createTask = async ({ workspaceId, projectId, title, description = '', status, priority, assignee, dueDate, userId }) => {
+export const createTask = async ({ workspaceId, projectId, title, description = '', status, priority, assignee, dueDate, userId, actor }) => {
   await getProjectInWorkspace(workspaceId, projectId);
   const validatedAssignee = await validateAssignee(workspaceId, assignee);
   const task = await Task.create({
@@ -52,6 +53,7 @@ export const createTask = async ({ workspaceId, projectId, title, description = 
     createdBy: userId,
   });
   await activityService.createActivity({ workspaceId, projectId, taskId: task._id, actorId: userId, action: 'TASK_CREATED', entityType: 'TASK', entityId: task._id });
+  emitWorkspaceEvent(workspaceId, 'task:created', { taskId: task._id, projectId, workspaceId, title: task.title, status: task.status, priority: task.priority, updatedBy: actorPayload(actor || { _id: userId }) });
   return findTask(workspaceId, projectId, task._id);
 };
 
@@ -62,7 +64,7 @@ export const getProjectTasks = async (workspaceId, projectId) => {
 
 export const getTaskById = async (workspaceId, projectId, taskId) => findTask(workspaceId, projectId, taskId);
 
-export const updateTask = async (workspaceId, projectId, taskId, updates, actorId) => {
+export const updateTask = async (workspaceId, projectId, taskId, updates, actorId, actor) => {
   const task = await findTask(workspaceId, projectId, taskId);
   const oldStatus = task.status;
   const oldAssignee = task.assignee?._id || task.assignee || null;
@@ -81,16 +83,21 @@ export const updateTask = async (workspaceId, projectId, taskId, updates, actorI
     if (statusChanged) await activityService.createActivity({ workspaceId, projectId, taskId, actorId, action: 'TASK_STATUS_CHANGED', entityType: 'TASK', entityId: taskId, metadata: { oldStatus, newStatus: task.status } });
     if (assigneeChanged) await activityService.createActivity({ workspaceId, projectId, taskId, actorId, action: 'TASK_ASSIGNED', entityType: 'TASK', entityId: taskId, metadata: { assigneeId: task.assignee || null } });
     if (!statusChanged && !assigneeChanged) await activityService.createActivity({ workspaceId, projectId, taskId, actorId, action: 'TASK_UPDATED', entityType: 'TASK', entityId: taskId });
+    const updatedBy = actorPayload(actor || { _id: actorId });
+    if (statusChanged) emitWorkspaceEvent(workspaceId, 'task:statusChanged', { taskId, projectId, workspaceId, oldStatus, newStatus: task.status, updatedBy });
+    if (assigneeChanged) emitWorkspaceEvent(workspaceId, 'task:assigned', { taskId, projectId, workspaceId, previousAssignee: oldAssignee, newAssignee: task.assignee || null, updatedBy });
+    if (!statusChanged && !assigneeChanged) emitWorkspaceEvent(workspaceId, 'task:updated', { taskId, projectId, workspaceId, title: task.title, description: task.description, priority: task.priority, dueDate: task.dueDate, updatedBy });
   }
   return task;
 };
 
-export const deleteTask = async (workspaceId, projectId, taskId, actorId) => {
+export const deleteTask = async (workspaceId, projectId, taskId, actorId, actor) => {
   await getProjectInWorkspace(workspaceId, projectId);
   ensureId(taskId, 'task');
   const result = await Task.deleteOne({ _id: taskId, workspaceId, projectId });
   if (!result.deletedCount) throw new ApiError(404, 'Task not found');
   if (actorId) await activityService.createActivity({ workspaceId, projectId, taskId, actorId, action: 'TASK_DELETED', entityType: 'TASK', entityId: taskId });
+  if (actorId) emitWorkspaceEvent(workspaceId, 'task:deleted', { taskId, projectId, workspaceId, updatedBy: actorPayload(actor || { _id: actorId }) });
   return { message: 'Task deleted successfully' };
 };
 

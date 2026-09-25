@@ -4,17 +4,20 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { clearCurrentTask, fetchTask } from '../taskSlice';
 import { createComment, deleteComment, fetchComments, updateComment } from '../../comments/commentSlice';
 import { fetchTaskActivity } from '../../activity/activitySlice';
+import { fetchWorkspace } from '../../workspaces/workspaceSlice';
+import useWorkspaceSocket from '../../../hooks/useWorkspaceSocket';
 import CommentForm from '../../comments/components/CommentForm';
 import CommentList from '../../comments/components/CommentList';
 import ActivityTimeline from '../../activity/components/ActivityTimeline';
 
 export default function TaskDetailPage() {
   const { workspaceId, projectId, taskId } = useParams(); const dispatch = useDispatch(); const navigate = useNavigate();
+  useWorkspaceSocket(workspaceId);
   const { currentTask, loading, error } = useSelector((state) => state.tasks);
   const commentsState = useSelector((state) => state.comments); const activityState = useSelector((state) => state.activity);
   const user = useSelector((state) => state.auth.user); const role = useSelector((state) => state.workspaces.currentWorkspace?.role);
   const comments = commentsState.byTask[`${workspaceId}:${taskId}`] || []; const activities = activityState.byTask[`${workspaceId}:${taskId}`]?.activities || [];
-  useEffect(() => { dispatch(fetchTask({ workspaceId, projectId, taskId })); dispatch(fetchComments({ workspaceId, taskId })); dispatch(fetchTaskActivity({ workspaceId, taskId })); return () => dispatch(clearCurrentTask()); }, [dispatch, workspaceId, projectId, taskId]);
+  useEffect(() => { dispatch(fetchWorkspace(workspaceId)); dispatch(fetchTask({ workspaceId, projectId, taskId })); dispatch(fetchComments({ workspaceId, taskId })); dispatch(fetchTaskActivity({ workspaceId, taskId })); return () => dispatch(clearCurrentTask()); }, [dispatch, workspaceId, projectId, taskId]);
   if (loading && !currentTask) return <div className="min-h-screen bg-slate-950 text-slate-400 p-10">Loading task…</div>;
   if (error && !currentTask) return <div className="min-h-screen bg-slate-950 text-red-400 p-10">{error}</div>;
   const create = async (content) => { await dispatch(createComment({ workspaceId, taskId, content })).unwrap(); dispatch(fetchTaskActivity({ workspaceId, taskId })); };
