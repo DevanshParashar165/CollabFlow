@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 import Project, { slugify } from '../models/Project.js';
 import ApiError from '../utils/ApiError.js';
 import activityService from './activityService.js';
+import { actorPayload, emitWorkspaceEvent } from '../sockets/emitter.js';
 
 const ensureProjectId = (projectId) => {
   if (!mongoose.Types.ObjectId.isValid(projectId)) {
@@ -33,7 +34,7 @@ const findProject = async (workspaceId, projectId) => {
   return project;
 };
 
-export const createProject = async ({ workspaceId, name, description = '', status, userId }) => {
+export const createProject = async ({ workspaceId, name, description = '', status, userId, actor }) => {
   const slug = await generateUniqueSlug(workspaceId, name);
   try {
     const project = await Project.create({
@@ -45,6 +46,7 @@ export const createProject = async ({ workspaceId, name, description = '', statu
       createdBy: userId,
     });
     await activityService.createActivity({ workspaceId, projectId: project._id, actorId: userId, action: 'PROJECT_CREATED', entityType: 'PROJECT', entityId: project._id });
+    emitWorkspaceEvent(workspaceId, 'project:created', { projectId: project._id, workspaceId, name: project.name, status: project.status, updatedBy: actorPayload(actor || { _id: userId }) });
     return project;
   } catch (error) {
     if (error.code === 11000) throw new ApiError(409, 'A project with this name already exists in the workspace');
@@ -65,6 +67,7 @@ export const updateProject = async (workspaceId, projectId, updates, actorId) =>
   try {
     await project.save();
     if (actorId) await activityService.createActivity({ workspaceId, projectId: project._id, actorId, action: 'PROJECT_UPDATED', entityType: 'PROJECT', entityId: project._id });
+    if (actorId) emitWorkspaceEvent(workspaceId, 'project:updated', { projectId: project._id, workspaceId, name: project.name, status: project.status, updatedBy: actorPayload(updates.actor) });
     return project;
   } catch (error) {
     if (error.code === 11000) throw new ApiError(409, 'A project with this name already exists in the workspace');
@@ -72,11 +75,12 @@ export const updateProject = async (workspaceId, projectId, updates, actorId) =>
   }
 };
 
-export const deleteProject = async (workspaceId, projectId, actorId) => {
+export const deleteProject = async (workspaceId, projectId, actorId, actor) => {
   ensureProjectId(projectId);
   const result = await Project.deleteOne({ _id: projectId, workspaceId });
   if (!result.deletedCount) throw new ApiError(404, 'Project not found');
   if (actorId) await activityService.createActivity({ workspaceId, projectId, actorId, action: 'PROJECT_DELETED', entityType: 'PROJECT', entityId: projectId });
+  if (actorId) emitWorkspaceEvent(workspaceId, 'project:deleted', { projectId, workspaceId, updatedBy: actorPayload(actor || { _id: actorId }) });
   return { message: 'Project deleted successfully' };
 };
 

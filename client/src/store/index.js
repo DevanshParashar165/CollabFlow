@@ -6,6 +6,7 @@ import projectReducer from '../features/projects/projectSlice';
 import taskReducer from '../features/tasks/taskSlice';
 import commentReducer from '../features/comments/commentSlice';
 import activityReducer from '../features/activity/activitySlice';
+import socketReducer from '../features/socket/socketSlice';
 
 export const store = configureStore({
   reducer: {
@@ -16,6 +17,7 @@ export const store = configureStore({
     tasks: taskReducer,
     comments: commentReducer,
     activity: activityReducer,
+    socket: socketReducer,
   },
   devTools: import.meta.env.DEV,
 });

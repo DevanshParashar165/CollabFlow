@@ -6,11 +6,13 @@ import { clearCurrentProject, fetchProject } from '../features/projects/projectS
 import { createTask, deleteTask, fetchTasks, updateTask } from '../features/tasks/taskSlice';
 import TaskForm from '../features/tasks/components/TaskForm';
 import TaskList from '../features/tasks/components/TaskList';
+import useWorkspaceSocket from '../hooks/useWorkspaceSocket';
 
 const taskKey = (workspaceId, projectId) => `${workspaceId}:${projectId}`;
 
 export default function ProjectDetailPage() {
   const { workspaceId, projectId } = useParams();
+  useWorkspaceSocket(workspaceId);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { currentProject, loading: projectLoading, error: projectError } = useSelector((state) => state.projects);

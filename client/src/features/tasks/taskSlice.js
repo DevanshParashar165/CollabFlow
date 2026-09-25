@@ -37,6 +37,31 @@ const taskSlice = createSlice({
   reducers: {
     clearTaskError: (state) => { state.error = null; },
     clearCurrentTask: (state) => { state.currentTask = null; state.currentContext = null; },
+    taskCreatedFromSocket: (state, action) => {
+      const { workspaceId, projectId, taskId, ...task } = action.payload;
+      const key = keyFor(workspaceId, projectId); const list = state.tasksByProject[key] || [];
+      if (!list.some((item) => item._id === taskId)) state.tasksByProject[key] = [{ ...task, _id: taskId, workspaceId, projectId }, ...list];
+    },
+    taskUpdatedFromSocket: (state, action) => {
+      const { workspaceId, projectId, taskId, ...changes } = action.payload; const key = keyFor(workspaceId, projectId);
+      state.tasksByProject[key] = (state.tasksByProject[key] || []).map((item) => item._id === taskId ? { ...item, ...changes } : item);
+      if (state.currentTask?._id === taskId) state.currentTask = { ...state.currentTask, ...changes };
+    },
+    taskStatusChangedFromSocket: (state, action) => {
+      const { workspaceId, projectId, taskId, newStatus } = action.payload; const key = keyFor(workspaceId, projectId);
+      state.tasksByProject[key] = (state.tasksByProject[key] || []).map((item) => item._id === taskId ? { ...item, status: newStatus } : item);
+      if (state.currentTask?._id === taskId) state.currentTask.status = newStatus;
+    },
+    taskAssignedFromSocket: (state, action) => {
+      const { workspaceId, projectId, taskId, newAssignee } = action.payload; const key = keyFor(workspaceId, projectId);
+      state.tasksByProject[key] = (state.tasksByProject[key] || []).map((item) => item._id === taskId ? { ...item, assignee: newAssignee } : item);
+      if (state.currentTask?._id === taskId) state.currentTask.assignee = newAssignee;
+    },
+    taskDeletedFromSocket: (state, action) => {
+      const { workspaceId, projectId, taskId } = action.payload; const key = keyFor(workspaceId, projectId);
+      state.tasksByProject[key] = (state.tasksByProject[key] || []).filter((item) => item._id !== taskId);
+      if (state.currentTask?._id === taskId) state.currentTask = null;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -46,11 +71,29 @@ const taskSlice = createSlice({
       .addCase(fetchTask.pending, (state) => { state.loading = true; state.error = null; state.currentTask = null; })
       .addCase(fetchTask.fulfilled, (state, action) => { state.loading = false; state.currentTask = action.payload.task; state.currentContext = keyFor(action.payload.workspaceId, action.payload.projectId); })
       .addCase(fetchTask.rejected, (state, action) => { state.loading = false; state.error = action.payload; })
-      .addCase(createTask.fulfilled, (state, action) => { const key = keyFor(action.payload.workspaceId, action.payload.projectId); state.tasksByProject[key] = [action.payload.task, ...(state.tasksByProject[key] || [])]; })
+
+      .addCase(createTask.fulfilled, (state, action) => {
+        const { workspaceId, projectId, task } = action.payload;
+        const key = keyFor(workspaceId, projectId);
+
+        const list = state.tasksByProject[key] || [];
+
+        const existingIndex = list.findIndex(
+          (item) => item._id === task._id
+        );
+
+        if (existingIndex !== -1) {
+          // Task already exists: update it instead of inserting a duplicate.
+          list[existingIndex] = task;
+        } else {
+          // Task does not exist: insert it.
+          state.tasksByProject[key] = [task, ...list];
+        }
+      })
       .addCase(updateTask.fulfilled, (state, action) => { const key = keyFor(action.payload.workspaceId, action.payload.projectId); state.tasksByProject[key] = (state.tasksByProject[key] || []).map((task) => task._id === action.payload.task._id ? action.payload.task : task); if (state.currentTask?._id === action.payload.task._id) state.currentTask = action.payload.task; })
       .addCase(deleteTask.fulfilled, (state, action) => { const key = keyFor(action.payload.workspaceId, action.payload.projectId); state.tasksByProject[key] = (state.tasksByProject[key] || []).filter((task) => task._id !== action.payload.taskId); if (state.currentTask?._id === action.payload.taskId) state.currentTask = null; });
   },
 });
 
-export const { clearTaskError, clearCurrentTask } = taskSlice.actions;
+export const { clearTaskError, clearCurrentTask, taskCreatedFromSocket, taskUpdatedFromSocket, taskStatusChangedFromSocket, taskAssignedFromSocket, taskDeletedFromSocket } = taskSlice.actions;
 export default taskSlice.reducer;

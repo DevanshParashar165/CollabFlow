@@ -8,6 +8,7 @@ export const createTask = async (req, res, next) => {
       projectId: req.params.projectId,
       title, description, status, priority, assignee, dueDate,
       userId: req.user._id,
+      actor: req.user,
     });
     res.status(201).json({ status: 'success', message: 'Task created successfully', data: { task } });
   } catch (error) { next(error); }
@@ -29,14 +30,14 @@ export const getTaskById = async (req, res, next) => {
 
 export const updateTask = async (req, res, next) => {
   try {
-    const task = await taskService.updateTask(req.params.workspaceId, req.params.projectId, req.params.taskId, req.body, req.user._id);
+    const task = await taskService.updateTask(req.params.workspaceId, req.params.projectId, req.params.taskId, req.body, req.user._id, req.user);
     res.status(200).json({ status: 'success', message: 'Task updated successfully', data: { task } });
   } catch (error) { next(error); }
 };
 
 export const deleteTask = async (req, res, next) => {
   try {
-    const result = await taskService.deleteTask(req.params.workspaceId, req.params.projectId, req.params.taskId, req.user._id);
+    const result = await taskService.deleteTask(req.params.workspaceId, req.params.projectId, req.params.taskId, req.user._id, req.user);
     res.status(200).json({ status: 'success', message: result.message });
   } catch (error) { next(error); }
 };
