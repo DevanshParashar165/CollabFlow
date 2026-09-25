@@ -57,6 +57,10 @@ export const initSocket = (httpServer) => {
   });
 
   io.on("connection", (socket) => {
+    const userId = socket.user?._id?.toString?.() || socket.user?._id;
+    if (userId) {
+      socket.join(`user:${userId}`);
+    }
     logger.info(`Socket connected: ${socket.id}`);
 
     socket.on("workspace:join", async (workspaceId, callback) => {
@@ -119,6 +123,12 @@ export const emitToWorkspace = (workspaceId, event, payload) => {
   return true;
 };
 
+export const emitToUser = (userId, event, payload) => {
+  if (!io || !userId) return false;
+  io.to(`user:${userId.toString()}`).emit(event, payload);
+  return true;
+};
+
 export const getPresence = () => presence;
 
 /**
@@ -137,5 +147,6 @@ export default {
   initSocket,
   getIO,
   emitToWorkspace,
+  emitToUser,
   getPresence,
 };

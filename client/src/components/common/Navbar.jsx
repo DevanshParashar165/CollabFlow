@@ -2,6 +2,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { APP_NAME } from '../../utils/constants';
 import { logoutUser } from '../../features/auth/authSlice';
+import NotificationBell from './NotificationBell';
 
 export default function Navbar() {
   const dispatch = useDispatch();
@@ -56,6 +57,9 @@ export default function Navbar() {
               {navLink('/dashboard', 'Dashboard', 'navbar-dashboard-link')}
               {navLink('/workspaces', 'Workspaces', 'navbar-workspaces-link')}
               {isSuperAdmin && navLink('/superadmin', 'Admin', 'navbar-superadmin-link')}
+
+              {/* Notification Bell */}
+              <NotificationBell />
 
               {/* User pill */}
               <div className="flex items-center space-x-3 pl-3 border-l border-slate-800">

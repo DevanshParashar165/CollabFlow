@@ -18,10 +18,14 @@ import PublicOnlyRoute from './features/auth/components/PublicOnlyRoute';
 import SuperAdminRoute from './features/auth/components/SuperAdminRoute';
 import { checkAuthStatus } from './features/auth/authSlice';
 import { disconnectSocket } from './socket/socket';
+import useNotificationSocket from './hooks/useNotificationSocket';
 
 export default function App() {
   const dispatch = useDispatch();
   const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
+
+  // User-scoped notifications and socket listener
+  useNotificationSocket();
 
   // On application startup: hydrate auth state via HTTP-only cookie
   useEffect(() => {

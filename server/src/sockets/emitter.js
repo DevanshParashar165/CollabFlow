@@ -1,4 +1,4 @@
-import { emitToWorkspace } from "./index.js";
+import { emitToWorkspace, emitToUser } from "./index.js";
 
 export const actorPayload = (actor) => ({
   id: actor?._id?.toString?.() || actor?._id,
@@ -9,4 +9,14 @@ export const actorPayload = (actor) => ({
 export const emitWorkspaceEvent = (workspaceId, event, payload) =>
   emitToWorkspace(workspaceId, event, payload);
 
-export default { actorPayload, emitWorkspaceEvent };
+export const emitUserEvent = (userId, event, payload) =>
+  emitToUser(userId, event, payload);
+
+export { emitToUser };
+
+export default {
+  actorPayload,
+  emitWorkspaceEvent,
+  emitUserEvent,
+  emitToUser,
+};

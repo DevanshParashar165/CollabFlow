@@ -5,8 +5,8 @@
 export const APP_NAME = 'CollabFlow';
 export const APP_DESCRIPTION = 'Real-Time Collaborative Project Management Platform';
 
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-export const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000';
+export const API_BASE_URL = import.meta.env?.VITE_API_URL || 'http://localhost:5000/api';
+export const SOCKET_URL = import.meta.env?.VITE_SOCKET_URL || 'http://localhost:5000';
 
 export const ROUTES = {
   HOME: '/',
@@ -41,4 +41,9 @@ export const API_ENDPOINTS = {
   TASK_ACTIVITY: (workspaceId, taskId) => `/workspaces/${workspaceId}/tasks/${taskId}/activity`,
   SUPERADMIN_USERS: '/superadmin/users',
   SUPERADMIN_WORKSPACES: '/superadmin/workspaces',
+  NOTIFICATIONS: '/notifications',
+  NOTIFICATION_UNREAD_COUNT: '/notifications/unread-count',
+  NOTIFICATION_MARK_READ: (id) => `/notifications/${id}/read`,
+  NOTIFICATION_MARK_ALL_READ: '/notifications/read-all',
+  NOTIFICATION_BY_ID: (id) => `/notifications/${id}`,
 };
