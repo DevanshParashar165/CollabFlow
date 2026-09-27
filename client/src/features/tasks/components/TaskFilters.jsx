@@ -1,4 +1,28 @@
 export default function TaskFilters({ filters, members, onChange }) {
   const set = (field, value) => onChange({ ...filters, [field]: value });
-  return <div className="flex flex-wrap gap-2 mb-4"><select value={filters.status} onChange={(e) => set('status', e.target.value)} className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-slate-300 text-xs"><option value="">All statuses</option><option>TODO</option><option>IN_PROGRESS</option><option>IN_REVIEW</option><option>DONE</option></select><select value={filters.priority} onChange={(e) => set('priority', e.target.value)} className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-slate-300 text-xs"><option value="">All priorities</option><option>LOW</option><option>MEDIUM</option><option>HIGH</option><option>URGENT</option></select><select value={filters.assignee} onChange={(e) => set('assignee', e.target.value)} className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-slate-300 text-xs"><option value="">All assignees</option><option value="unassigned">Unassigned</option>{members.map((member) => <option key={member.user?._id} value={member.user?._id}>{member.user?.name || member.user?.email}</option>)}</select></div>;
+  const controlClass = 'h-9 rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-700 shadow-sm outline-none transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100';
+
+  return (
+    <div className="mb-4 flex flex-wrap gap-2" aria-label="Task filters">
+      <select aria-label="Filter by status" value={filters.status} onChange={(event) => set('status', event.target.value)} className={controlClass}>
+        <option value="">All statuses</option>
+        <option value="TODO">To do</option>
+        <option value="IN_PROGRESS">In progress</option>
+        <option value="IN_REVIEW">In review</option>
+        <option value="DONE">Done</option>
+      </select>
+      <select aria-label="Filter by priority" value={filters.priority} onChange={(event) => set('priority', event.target.value)} className={controlClass}>
+        <option value="">All priorities</option>
+        <option value="LOW">Low</option>
+        <option value="MEDIUM">Medium</option>
+        <option value="HIGH">High</option>
+        <option value="URGENT">Urgent</option>
+      </select>
+      <select aria-label="Filter by assignee" value={filters.assignee} onChange={(event) => set('assignee', event.target.value)} className={controlClass}>
+        <option value="">All assignees</option>
+        <option value="unassigned">Unassigned</option>
+        {members.map((member) => <option key={member.user?._id} value={member.user?._id}>{member.user?.name || member.user?.email}</option>)}
+      </select>
+    </div>
+  );
 }

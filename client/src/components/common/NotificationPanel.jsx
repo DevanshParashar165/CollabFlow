@@ -88,16 +88,16 @@ export default function NotificationPanel() {
       id="notification-dropdown-panel"
       role="dialog"
       aria-label="Notification center"
-      className="absolute right-0 top-full mt-2 w-80 sm:w-96 rounded-2xl bg-slate-950/95 backdrop-blur-xl border border-slate-800/80 shadow-2xl shadow-black/60 z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200"
+      className="absolute right-0 top-full z-50 mt-2 w-80 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl shadow-slate-900/10 animate-in fade-in slide-in-from-top-2 duration-200 sm:w-96"
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3.5 border-b border-slate-800/80 bg-slate-900/40">
+      <div className="flex items-center justify-between border-b border-slate-100 bg-white px-4 py-3.5">
         <div className="flex items-center space-x-2">
-          <h3 className="text-sm font-semibold text-white">Notifications</h3>
+          <h3 className="text-sm font-semibold text-slate-900">Notifications</h3>
           {unreadCount > 0 && (
             <span
               id="notification-unread-count-pill"
-              className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30"
+              className="rounded-full border border-indigo-100 bg-indigo-50 px-1.5 py-0.5 text-[10px] font-bold text-indigo-700"
             >
               {unreadCount} new
             </span>
@@ -108,7 +108,7 @@ export default function NotificationPanel() {
           <button
             id="notification-mark-all-read-btn"
             onClick={handleMarkAllRead}
-            className="text-xs text-indigo-400 hover:text-indigo-300 font-medium transition-colors cursor-pointer"
+            className="cursor-pointer text-xs font-medium text-indigo-700 transition-colors hover:text-indigo-800"
           >
             Mark all read
           </button>
@@ -116,38 +116,38 @@ export default function NotificationPanel() {
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center px-4 pt-2.5 border-b border-slate-800/60 bg-slate-950/60">
+      <div className="flex items-center border-b border-slate-100 bg-white px-4 pt-2.5">
         <button
           onClick={() => setActiveTab('all')}
           className={`pb-2 text-xs font-medium mr-4 transition-colors relative cursor-pointer ${
             activeTab === 'all'
-              ? 'text-white'
-              : 'text-slate-400 hover:text-slate-200'
+              ? 'text-slate-900'
+              : 'text-slate-500 hover:text-slate-800'
           }`}
         >
           All
           {activeTab === 'all' && (
-            <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-500 rounded-full"></span>
+            <span className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full bg-indigo-600"></span>
           )}
         </button>
         <button
           onClick={() => setActiveTab('unread')}
           className={`pb-2 text-xs font-medium transition-colors relative cursor-pointer ${
             activeTab === 'unread'
-              ? 'text-white'
-              : 'text-slate-400 hover:text-slate-200'
+              ? 'text-slate-900'
+              : 'text-slate-500 hover:text-slate-800'
           }`}
         >
           Unread ({unreadCount})
           {activeTab === 'unread' && (
-            <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-500 rounded-full"></span>
+            <span className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full bg-indigo-600"></span>
           )}
         </button>
       </div>
 
       {/* Error state */}
       {error && (
-        <div className="p-3 bg-red-500/10 border-b border-red-500/20 flex items-center justify-between text-xs text-red-300">
+        <div className="flex items-center justify-between border-b border-red-100 bg-red-50 p-3 text-xs text-red-700">
           <span>{error}</span>
           <button
             onClick={handleRetry}
@@ -159,11 +159,11 @@ export default function NotificationPanel() {
       )}
 
       {/* List */}
-      <div className="max-h-[380px] overflow-y-auto divide-y divide-slate-800/40">
+      <div className="max-h-95 divide-y divide-slate-100 overflow-y-auto">
         {loading && notifications.length === 0 ? (
           <div className="py-12 px-4 text-center">
-            <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-indigo-500 border-t-transparent mb-2"></div>
-            <p className="text-xs text-slate-400">Loading notifications...</p>
+            <div className="mb-2 inline-block h-6 w-6 animate-spin rounded-full border-2 border-indigo-600 border-t-transparent"></div>
+            <p className="text-xs text-slate-500">Loading notifications...</p>
           </div>
         ) : filteredNotifications.length > 0 ? (
           filteredNotifications.map((notif) => (
@@ -171,15 +171,15 @@ export default function NotificationPanel() {
           ))
         ) : (
           <div className="py-12 px-4 text-center">
-            <div className="w-12 h-12 mx-auto rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-500 mb-3 text-lg">
+            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-lg text-slate-400">
               🔔
             </div>
-            <p className="text-xs font-medium text-slate-300">
+            <p className="text-xs font-medium text-slate-700">
               {activeTab === 'unread'
                 ? 'No unread notifications'
                 : 'No notifications yet'}
             </p>
-            <p className="text-[11px] text-slate-500 mt-1 max-w-[200px] mx-auto">
+            <p className="mx-auto mt-1 max-w-50 text-[11px] text-slate-500">
               We will notify you when someone assigns you tasks or comments.
             </p>
           </div>
@@ -187,12 +187,12 @@ export default function NotificationPanel() {
 
         {/* Load More Button */}
         {pagination.page < pagination.pages && (
-          <div className="p-2.5 text-center bg-slate-900/20">
+          <div className="bg-slate-50 p-2.5 text-center">
             <button
               id="notification-load-more-btn"
               onClick={handleLoadMore}
               disabled={loading}
-              className="text-xs text-indigo-400 hover:text-indigo-300 font-medium py-1 px-3 rounded hover:bg-slate-800/50 transition-colors disabled:opacity-50"
+              className="rounded px-3 py-1 text-xs font-medium text-indigo-700 transition-colors hover:bg-indigo-50 hover:text-indigo-800 disabled:opacity-50"
             >
               {loading ? 'Loading...' : 'Load older notifications'}
             </button>

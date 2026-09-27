@@ -26,37 +26,37 @@ const getTypeConfig = (type) => {
   switch (type) {
     case 'TASK_ASSIGNED':
       return {
-        badgeBg: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
+        badgeBg: 'bg-purple-50 text-purple-700 border-purple-100',
         icon: '📋',
         label: 'Assigned',
       };
     case 'TASK_UNASSIGNED':
       return {
-        badgeBg: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+        badgeBg: 'bg-amber-50 text-amber-700 border-amber-100',
         icon: '📤',
         label: 'Unassigned',
       };
     case 'TASK_STATUS_CHANGED':
       return {
-        badgeBg: 'bg-sky-500/10 text-sky-400 border-sky-500/20',
+        badgeBg: 'bg-sky-50 text-sky-700 border-sky-100',
         icon: '🔄',
         label: 'Status',
       };
     case 'COMMENT_ADDED':
       return {
-        badgeBg: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20',
+        badgeBg: 'bg-indigo-50 text-indigo-700 border-indigo-100',
         icon: '💬',
         label: 'Comment',
       };
     case 'COMMENT_MENTION':
       return {
-        badgeBg: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+        badgeBg: 'bg-emerald-50 text-emerald-700 border-emerald-100',
         icon: '@',
         label: 'Mention',
       };
     default:
       return {
-        badgeBg: 'bg-slate-500/10 text-slate-400 border-slate-500/20',
+        badgeBg: 'bg-slate-100 text-slate-600 border-slate-200',
         icon: '🔔',
         label: 'Notification',
       };
@@ -119,19 +119,19 @@ export default function NotificationItem({ notification }) {
       role="button"
       tabIndex={0}
       aria-label={`${isUnread ? 'Unread ' : ''}${notification.message}`}
-      className={`group relative flex items-start space-x-3 p-3.5 transition-all duration-150 cursor-pointer border-b border-slate-800/60 ${
+      className={`group relative flex cursor-pointer items-start space-x-3 border-b border-slate-100 p-3.5 transition-all duration-150 ${
         isUnread
-          ? 'bg-slate-900/60 hover:bg-slate-850/80 border-l-4 border-l-indigo-500'
-          : 'bg-transparent hover:bg-slate-900/40 border-l-4 border-l-transparent text-slate-300'
+          ? 'border-l-4 border-l-indigo-500 bg-indigo-50/40 hover:bg-indigo-50'
+          : 'border-l-4 border-l-transparent bg-white text-slate-700 hover:bg-slate-50'
       }`}
     >
       {/* Actor Avatar */}
       <div className="relative shrink-0 mt-0.5">
-        <div className="h-8 w-8 rounded-full bg-linear-to-tr from-indigo-600/40 to-violet-600/40 border border-indigo-500/30 text-indigo-200 flex items-center justify-center text-xs font-bold">
+        <div className="flex h-8 w-8 items-center justify-center rounded-full border border-indigo-100 bg-indigo-50 text-xs font-bold text-indigo-700">
           {actorInitials}
         </div>
         <span
-          className={`absolute -bottom-1 -right-1 h-4 w-4 rounded-full border border-slate-900 flex items-center justify-center text-[10px] ${config.badgeBg}`}
+          className={`absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full border border-white text-[10px] ${config.badgeBg}`}
         >
           {config.icon}
         </span>
@@ -140,36 +140,36 @@ export default function NotificationItem({ notification }) {
       {/* Content */}
       <div className="flex-1 min-w-0 pr-6">
         {notification.actorId?.name && (
-          <p className="text-[10px] font-medium text-indigo-300 mb-0.5">
+          <p className="mb-0.5 text-[10px] font-medium text-indigo-700">
             {notification.actorId.name}
           </p>
         )}
-        <p className="text-xs text-slate-200 leading-snug line-clamp-2">
+        <p className="line-clamp-2 text-xs leading-snug text-slate-800">
           {notification.message}
         </p>
         {notification.metadata?.taskTitle && (
-          <p className="text-[10px] text-slate-500 mt-1 truncate">
+          <p className="mt-1 truncate text-[10px] text-slate-500">
             Task: {notification.metadata.taskTitle}
           </p>
         )}
-        <div className="flex items-center space-x-2 mt-1.5">
-          <span className="text-[10px] text-slate-400">
+        <div className="mt-1.5 flex items-center space-x-2">
+          <span className="text-[10px] text-slate-500">
             {formatTimeAgo(notification.createdAt)}
           </span>
           {isUnread && (
-            <span className="h-1.5 w-1.5 rounded-full bg-indigo-500 ring-2 ring-indigo-500/30"></span>
+            <span className="h-1.5 w-1.5 rounded-full bg-indigo-600 ring-2 ring-indigo-100"></span>
           )}
         </div>
       </div>
 
       {/* Quick Action: Delete */}
-      <div className="absolute right-2.5 top-3.5 opacity-0 group-hover:opacity-100 transition-opacity">
+      <div className="absolute right-2.5 top-3.5 opacity-0 transition-opacity group-hover:opacity-100">
         {isUnread && (
           <button
             onClick={handleMarkRead}
             title="Mark as read"
             aria-label="Mark notification as read"
-            className="p-1 rounded text-slate-500 hover:text-indigo-400 hover:bg-indigo-500/10 transition-colors"
+            className="rounded p-1 text-slate-400 transition-colors hover:bg-indigo-50 hover:text-indigo-700"
           >
             <span className="block h-2 w-2 rounded-full border border-current" />
           </button>
@@ -178,7 +178,7 @@ export default function NotificationItem({ notification }) {
           onClick={handleDelete}
           title="Delete notification"
           aria-label="Delete notification"
-          className="p-1 rounded text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+            className="rounded p-1 text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600"
         >
           <svg
             className="w-3.5 h-3.5"
