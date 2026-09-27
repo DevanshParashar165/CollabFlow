@@ -56,31 +56,45 @@ export default function ProjectDetailPage() {
     }
   };
 
-  if (projectLoading && !currentProject) return <div className="min-h-screen bg-slate-950 text-slate-400 p-10">Loading project…</div>;
-  if (projectError && !currentProject) return <div className="min-h-screen bg-slate-950 text-red-400 p-10">{projectError}</div>;
+  if (projectLoading && !currentProject) return <div className="mx-auto flex min-h-[50vh] max-w-6xl items-center px-4 text-sm text-slate-500 sm:px-6 lg:px-8">Loading project…</div>;
+  if (projectError && !currentProject) return <div className="mx-auto max-w-6xl px-4 py-10 text-sm text-rose-700 sm:px-6 lg:px-8">{projectError}</div>;
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white">
-      <div className="max-w-5xl mx-auto px-6 py-10">
-        <button onClick={() => navigate(`/workspaces/${workspaceId}/projects`)} className="text-slate-400 hover:text-white text-sm mb-8 cursor-pointer">← Projects</button>
+    <div className="w-full text-slate-900">
+      <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
+        <button onClick={() => navigate(`/workspaces/${workspaceId}/projects`)} className="mb-5 cursor-pointer text-sm font-medium text-slate-500 transition-colors hover:text-indigo-700">← Projects</button>
         {currentProject && (
           <>
-            <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-6">
-              <div className="flex justify-between gap-4">
-                <div><h1 className="text-3xl font-bold">{currentProject.name}</h1><p className="text-slate-400 mt-2">{currentProject.description || 'No description provided.'}</p></div>
-                <span className="h-fit text-xs px-3 py-1.5 rounded-full bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">{currentProject.status}</span>
+            <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+              <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
+                <div>
+                  <h1 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">{currentProject.name}</h1>
+                  <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">{currentProject.description || 'No description provided.'}</p>
+                </div>
+                <span className="h-fit shrink-0 rounded-full border border-indigo-100 bg-indigo-50 px-3 py-1.5 text-xs font-medium text-indigo-700">{currentProject.status}</span>
               </div>
-              <div className="grid sm:grid-cols-2 gap-4 mt-8 text-sm"><div><p className="text-slate-500">Created by</p><p className="text-slate-200 mt-1">{currentProject.createdBy?.name || currentProject.createdBy?.email || 'Unknown'}</p></div><div><p className="text-slate-500">Created at</p><p className="text-slate-200 mt-1">{currentProject.createdAt ? new Date(currentProject.createdAt).toLocaleString() : '-'}</p></div></div>
+              <div className="mt-6 grid gap-4 border-t border-slate-100 pt-4 text-sm sm:grid-cols-2">
+                <div><p className="text-xs font-medium text-slate-500">Created by</p><p className="mt-1 text-slate-800">{currentProject.createdBy?.name || currentProject.createdBy?.email || 'Unknown'}</p></div>
+                <div><p className="text-xs font-medium text-slate-500">Created at</p><p className="mt-1 text-slate-800">{currentProject.createdAt ? new Date(currentProject.createdAt).toLocaleString() : '-'}</p></div>
+              </div>
             </div>
-            <section className="mt-6 bg-slate-900/60 border border-slate-800/80 rounded-2xl p-6">
-              <div className="flex items-center justify-between mb-5"><div><h2 className="text-xl font-semibold">Tasks</h2><p className="text-slate-500 text-xs mt-1">{tasks.length} task{tasks.length !== 1 ? 's' : ''}</p></div>{canManage && <button onClick={() => { setEditing(null); setShowForm(true); }} className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-sm font-medium cursor-pointer">Create Task</button>}</div>
-              {taskError && <p className="text-red-400 text-sm mb-4">{taskError}</p>}
-              {taskLoading && !tasks.length ? <p className="text-slate-500 text-sm">Loading tasks…</p> : <TaskList tasks={tasks} members={members} filters={filters} onFiltersChange={setFilters} canManage={canManage} canAssign={canAssign} onOpen={(task) => navigate(`/workspaces/${workspaceId}/projects/${projectId}/tasks/${task._id}`)} onEdit={(task) => { setEditing(task); setShowForm(true); }} onDelete={removeTask} />}
+            <section className="mt-6 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+              <div className="flex flex-col justify-between gap-4 border-b border-slate-100 px-5 py-4 sm:flex-row sm:items-center sm:px-6">
+                <div>
+                  <h2 className="text-lg font-semibold text-slate-900">Tasks</h2>
+                  <p className="mt-1 text-xs text-slate-500">{tasks.length} task{tasks.length !== 1 ? 's' : ''}</p>
+                </div>
+                {canManage && <button onClick={() => { setEditing(null); setShowForm(true); }} className="inline-flex items-center justify-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-700 cursor-pointer">Create Task</button>}
+              </div>
+              <div className="p-5 sm:p-6">
+                {taskError && <p className="mb-4 rounded-md border border-rose-100 bg-rose-50 px-3 py-2 text-sm text-rose-700">{taskError}</p>}
+                {taskLoading && !tasks.length ? <p className="py-6 text-center text-sm text-slate-500">Loading tasks…</p> : <TaskList tasks={tasks} members={members} filters={filters} onFiltersChange={setFilters} canManage={canManage} canAssign={canAssign} onOpen={(task) => navigate(`/workspaces/${workspaceId}/projects/${projectId}/tasks/${task._id}`)} onEdit={(task) => { setEditing(task); setShowForm(true); }} onDelete={removeTask} />}
+              </div>
             </section>
           </>
         )}
       </div>
-      {showForm && <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4"><div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-md"><h2 className="text-xl font-bold mb-5">{editing ? 'Edit Task' : 'Create Task'}</h2><TaskForm initialTask={editing} members={members} canAssign={canAssign} onSubmit={saveTask} onCancel={() => { setShowForm(false); setEditing(null); }} submitting={submitting} /></div></div>}
+      {showForm && <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/35 p-4 backdrop-blur-[2px]"><div role="dialog" aria-modal="true" aria-labelledby="task-form-title" className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-xl border border-slate-200 bg-white p-5 shadow-xl sm:p-6"><h2 id="task-form-title" className="mb-5 text-lg font-semibold text-slate-900">{editing ? 'Edit Task' : 'Create Task'}</h2><TaskForm initialTask={editing} members={members} canAssign={canAssign} onSubmit={saveTask} onCancel={() => { setShowForm(false); setEditing(null); }} submitting={submitting} /></div></div>}
     </div>
   );
 }

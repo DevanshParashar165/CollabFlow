@@ -5,13 +5,13 @@ import { API_ENDPOINTS } from '../utils/constants';
 
 function StatCard({ label, value, color, icon }) {
   return (
-    <div className="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-5 flex items-center space-x-4">
+    <div className="flex items-center space-x-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
       <div className={`w-12 h-12 rounded-xl ${color} flex items-center justify-center text-white text-xl shadow-lg`}>
         {icon}
       </div>
       <div>
-        <p className="text-slate-400 text-xs font-medium">{label}</p>
-        <p className="text-white text-2xl font-bold">{value ?? '—'}</p>
+        <p className="text-xs font-medium text-slate-500">{label}</p>
+        <p className="text-2xl font-semibold text-slate-900">{value ?? '—'}</p>
       </div>
     </div>
   );
@@ -57,26 +57,26 @@ export default function SuperAdminPage() {
   }, [usersPage, wsPage]);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white">
-      <div className="max-w-6xl mx-auto px-6 py-10">
+    <div className="w-full text-slate-900">
+      <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
 
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center space-x-3 mb-2">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-violet-600 to-fuchsia-600 flex items-center justify-center shadow-lg shadow-violet-500/30">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-violet-600">
               <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
               </svg>
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-white tracking-tight">SuperAdmin Portal</h1>
-              <p className="text-slate-400 text-sm">Logged in as <span className="text-violet-400 font-medium">{user?.email}</span></p>
+              <h1 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">SuperAdmin Portal</h1>
+              <p className="text-sm text-slate-600">Logged in as <span className="font-medium text-violet-700">{user?.email}</span></p>
             </div>
           </div>
         </div>
 
         {error && (
-          <div className="mb-6 bg-red-500/10 border border-red-500/20 rounded-xl p-4 text-red-400 text-sm">
+          <div className="mb-6 rounded-md border border-rose-100 bg-rose-50 p-4 text-sm text-rose-700">
             {error}
           </div>
         )}
@@ -116,7 +116,7 @@ export default function SuperAdminPage() {
         </div>
 
         {/* Tab selector */}
-        <div className="flex border-b border-slate-800 mb-6">
+        <div className="mb-5 flex border-b border-slate-200">
           {['users', 'workspaces'].map((t) => (
             <button
               key={t}
@@ -124,8 +124,8 @@ export default function SuperAdminPage() {
               onClick={() => setTab(t)}
               className={`px-5 py-2.5 text-sm font-medium capitalize transition-all cursor-pointer border-b-2 -mb-px ${
                 tab === t
-                  ? 'border-violet-500 text-violet-400'
-                  : 'border-transparent text-slate-500 hover:text-slate-300'
+                  ? 'border-violet-600 text-violet-700'
+                  : 'border-transparent text-slate-500 hover:text-slate-800'
               }`}
             >
               {t}
@@ -145,32 +145,32 @@ export default function SuperAdminPage() {
             {/* Users table */}
             {tab === 'users' && (
               <div>
-                <div className="bg-slate-900/60 border border-slate-800/80 rounded-2xl overflow-hidden">
+                <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead>
-                        <tr className="border-b border-slate-800">
-                          <th className="text-left px-5 py-3 text-slate-400 font-medium">Name</th>
-                          <th className="text-left px-5 py-3 text-slate-400 font-medium">Email</th>
-                          <th className="text-left px-5 py-3 text-slate-400 font-medium">Platform Role</th>
-                          <th className="text-left px-5 py-3 text-slate-400 font-medium">Joined</th>
+                        <tr className="border-b border-slate-200 bg-slate-50">
+                          <th className="px-5 py-3 text-left font-medium text-slate-600">Name</th>
+                          <th className="px-5 py-3 text-left font-medium text-slate-600">Email</th>
+                          <th className="px-5 py-3 text-left font-medium text-slate-600">Platform Role</th>
+                          <th className="px-5 py-3 text-left font-medium text-slate-600">Joined</th>
                         </tr>
                       </thead>
                       <tbody>
                         {users.map((u) => (
-                          <tr key={u._id} className="border-b border-slate-800/50 hover:bg-slate-800/20 transition-colors">
-                            <td className="px-5 py-3 text-white font-medium">{u.name}</td>
-                            <td className="px-5 py-3 text-slate-400">{u.email}</td>
+                          <tr key={u._id} className="border-b border-slate-100 transition-colors hover:bg-slate-50">
+                            <td className="px-5 py-3 font-medium text-slate-900">{u.name}</td>
+                            <td className="px-5 py-3 text-slate-600">{u.email}</td>
                             <td className="px-5 py-3">
                               <span className={`text-xs px-2.5 py-1 rounded-full font-semibold border ${
                                 u.platformRole === 'SUPERADMIN'
-                                  ? 'bg-violet-500/10 text-violet-400 border-violet-500/20'
-                                  : 'bg-slate-500/10 text-slate-400 border-slate-500/20'
+                                  ? 'bg-violet-50 text-violet-700 border-violet-200'
+                                  : 'bg-slate-50 text-slate-600 border-slate-200'
                               }`}>
                                 {u.platformRole}
                               </span>
                             </td>
-                            <td className="px-5 py-3 text-slate-500 text-xs">
+                            <td className="px-5 py-3 text-xs text-slate-500">
                               {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : '—'}
                             </td>
                           </tr>
@@ -195,14 +195,14 @@ export default function SuperAdminPage() {
                       <button
                         onClick={() => setUsersPage((p) => Math.max(1, p - 1))}
                         disabled={usersPage <= 1}
-                        className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-40 text-slate-300 text-xs cursor-pointer"
+                        className="cursor-pointer rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-50 disabled:opacity-40"
                       >
                         Prev
                       </button>
                       <button
                         onClick={() => setUsersPage((p) => Math.min(usersMeta.pages, p + 1))}
                         disabled={usersPage >= usersMeta.pages}
-                        className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-40 text-slate-300 text-xs cursor-pointer"
+                        className="cursor-pointer rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-50 disabled:opacity-40"
                       >
                         Next
                       </button>
@@ -215,24 +215,24 @@ export default function SuperAdminPage() {
             {/* Workspaces table */}
             {tab === 'workspaces' && (
               <div>
-                <div className="bg-slate-900/60 border border-slate-800/80 rounded-2xl overflow-hidden">
+                <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead>
-                        <tr className="border-b border-slate-800">
-                          <th className="text-left px-5 py-3 text-slate-400 font-medium">Name</th>
-                          <th className="text-left px-5 py-3 text-slate-400 font-medium">Slug</th>
-                          <th className="text-left px-5 py-3 text-slate-400 font-medium">Owner</th>
-                          <th className="text-left px-5 py-3 text-slate-400 font-medium">Created</th>
+                        <tr className="border-b border-slate-200 bg-slate-50">
+                          <th className="px-5 py-3 text-left font-medium text-slate-600">Name</th>
+                          <th className="px-5 py-3 text-left font-medium text-slate-600">Slug</th>
+                          <th className="px-5 py-3 text-left font-medium text-slate-600">Owner</th>
+                          <th className="px-5 py-3 text-left font-medium text-slate-600">Created</th>
                         </tr>
                       </thead>
                       <tbody>
                         {workspaces.map((ws) => (
-                          <tr key={ws._id} className="border-b border-slate-800/50 hover:bg-slate-800/20 transition-colors">
-                            <td className="px-5 py-3 text-white font-medium">{ws.name}</td>
-                            <td className="px-5 py-3 text-slate-400 font-mono text-xs">/{ws.slug}</td>
-                            <td className="px-5 py-3 text-slate-400">{ws.createdBy?.name || ws.createdBy?.email || '—'}</td>
-                            <td className="px-5 py-3 text-slate-500 text-xs">
+                          <tr key={ws._id} className="border-b border-slate-100 transition-colors hover:bg-slate-50">
+                            <td className="px-5 py-3 font-medium text-slate-900">{ws.name}</td>
+                            <td className="px-5 py-3 font-mono text-xs text-slate-600">/{ws.slug}</td>
+                            <td className="px-5 py-3 text-slate-600">{ws.createdBy?.name || ws.createdBy?.email || '—'}</td>
+                            <td className="px-5 py-3 text-xs text-slate-500">
                               {ws.createdAt ? new Date(ws.createdAt).toLocaleDateString() : '—'}
                             </td>
                           </tr>
@@ -256,14 +256,14 @@ export default function SuperAdminPage() {
                       <button
                         onClick={() => setWsPage((p) => Math.max(1, p - 1))}
                         disabled={wsPage <= 1}
-                        className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-40 text-slate-300 text-xs cursor-pointer"
+                        className="cursor-pointer rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-50 disabled:opacity-40"
                       >
                         Prev
                       </button>
                       <button
                         onClick={() => setWsPage((p) => Math.min(wsMeta.pages, p + 1))}
                         disabled={wsPage >= wsMeta.pages}
-                        className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-40 text-slate-300 text-xs cursor-pointer"
+                        className="cursor-pointer rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-50 disabled:opacity-40"
                       >
                         Next
                       </button>

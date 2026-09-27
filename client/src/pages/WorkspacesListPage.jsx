@@ -48,18 +48,18 @@ export default function WorkspacesListPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white">
-      <div className="max-w-5xl mx-auto px-6 py-10">
+    <div className="w-full text-slate-900">
+      <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-white tracking-tight">Workspaces</h1>
-            <p className="text-slate-400 mt-1 text-sm">Manage your collaborative project spaces</p>
+            <h1 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">Workspaces</h1>
+            <p className="mt-1 text-sm text-slate-600">Manage your collaborative project spaces</p>
           </div>
           <button
             id="create-workspace-btn"
             onClick={() => setShowCreateModal(true)}
-            className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm transition-all duration-200 flex items-center space-x-2 cursor-pointer"
+            className="flex cursor-pointer items-center space-x-2 rounded-md bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-indigo-700"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
@@ -70,14 +70,14 @@ export default function WorkspacesListPage() {
 
         {/* Error banner */}
         {error && (
-          <div className="mb-6 bg-red-500/10 border border-red-500/20 rounded-xl p-4 text-red-400 text-sm">
+          <div className="mb-6 rounded-md border border-rose-100 bg-rose-50 p-4 text-sm text-rose-700">
             {error}
           </div>
         )}
 
         {/* Loading */}
         {loading && (
-          <div className="flex items-center justify-center py-20">
+          <div className="flex min-h-[40vh] items-center justify-center">
             <div className="relative w-10 h-10">
               <div className="absolute inset-0 rounded-full border-2 border-indigo-500/20"></div>
               <div className="absolute inset-0 rounded-full border-2 border-indigo-500 border-t-transparent animate-spin"></div>
@@ -87,17 +87,17 @@ export default function WorkspacesListPage() {
 
         {/* Empty state */}
         {!loading && workspaces.length === 0 && (
-          <div className="text-center py-20">
-            <div className="w-20 h-20 mx-auto mb-6 rounded-3xl bg-slate-800/60 border border-slate-700/60 flex items-center justify-center">
-              <svg className="w-10 h-10 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="py-14 text-center">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl border border-slate-200 bg-white">
+              <svg className="h-7 w-7 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
               </svg>
             </div>
-            <h3 className="text-lg font-semibold text-slate-300 mb-2">No workspaces yet</h3>
-            <p className="text-slate-500 text-sm mb-6">Create your first workspace to start collaborating with your team.</p>
+            <h3 className="mb-2 text-lg font-semibold text-slate-900">No workspaces yet</h3>
+            <p className="mb-5 text-sm text-slate-600">Create your first workspace to start collaborating with your team.</p>
             <button
               onClick={() => setShowCreateModal(true)}
-              className="px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm transition-all duration-200 cursor-pointer"
+              className="cursor-pointer rounded-md bg-indigo-600 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-indigo-700"
             >
               Create Workspace
             </button>
@@ -110,40 +110,40 @@ export default function WorkspacesListPage() {
             {workspaces.map((ws) => (
               <div
                 key={ws._id}
-                className="bg-slate-900/60 backdrop-blur-md border border-slate-800/80 rounded-2xl p-5 hover:border-indigo-500/30 transition-all duration-200 cursor-pointer group"
+                className="group cursor-pointer rounded-lg border border-slate-200 bg-white p-5 shadow-sm transition-shadow duration-200 hover:border-indigo-200 hover:shadow-md"
                 onClick={() => navigate(`/workspaces/${ws._id}`)}
               >
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-600 flex items-center justify-center text-white font-bold text-sm">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-50 text-sm font-semibold text-indigo-700">
                       {ws.name?.[0]?.toUpperCase() || 'W'}
                     </div>
                     <div>
-                      <h3 className="text-white font-semibold group-hover:text-indigo-300 transition-colors">{ws.name}</h3>
+                      <h3 className="font-semibold text-slate-900 transition-colors group-hover:text-indigo-700">{ws.name}</h3>
                       <p className="text-slate-500 text-xs">/{ws.slug}</p>
                     </div>
                   </div>
                   <span className={`text-xs px-2.5 py-1 rounded-full font-semibold border ${
-                    ws.role === 'OWNER' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
-                    ws.role === 'ADMIN' ? 'bg-purple-500/10 text-purple-400 border-purple-500/20' :
-                    ws.role === 'MEMBER' ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' :
-                    'bg-slate-500/10 text-slate-400 border-slate-500/20'
+                    ws.role === 'OWNER' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                    ws.role === 'ADMIN' ? 'bg-purple-50 text-purple-700 border-purple-200' :
+                    ws.role === 'MEMBER' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' :
+                    'bg-slate-50 text-slate-600 border-slate-200'
                   }`}>
                     {ws.role}
                   </span>
                 </div>
                 {ws.description && (
-                  <p className="text-slate-400 text-sm line-clamp-2 mb-3">{ws.description}</p>
+                  <p className="mb-3 line-clamp-2 text-sm text-slate-600">{ws.description}</p>
                 )}
                 <div className="flex items-center justify-between">
-                  <p className="text-slate-600 text-xs">
+                  <p className="text-xs text-slate-500">
                     Created {ws.createdAt ? new Date(ws.createdAt).toLocaleDateString() : '-'}
                   </p>
                   {ws.role === 'OWNER' && (
                     <button
                       id={`delete-workspace-${ws._id}`}
                       onClick={(e) => { e.stopPropagation(); handleDelete(ws._id); }}
-                      className="text-xs text-red-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all cursor-pointer"
+                      className="cursor-pointer text-xs font-medium text-rose-600 opacity-0 transition-opacity hover:text-rose-700 group-hover:opacity-100"
                     >
                       Delete
                     </button>
@@ -157,13 +157,13 @@ export default function WorkspacesListPage() {
 
       {/* Create Workspace Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-md shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/35 p-4 backdrop-blur-[2px]">
+          <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-xl border border-slate-200 bg-white p-5 shadow-xl sm:p-6">
             <div className="flex items-center justify-between mb-5">
-              <h2 className="text-xl font-bold text-white">Create Workspace</h2>
+              <h2 className="text-lg font-semibold text-slate-900">Create Workspace</h2>
               <button
                 onClick={() => { setShowCreateModal(false); setCreateError(''); }}
-                className="text-slate-500 hover:text-white transition-colors cursor-pointer"
+                className="cursor-pointer text-slate-400 transition-colors hover:text-slate-700"
               >
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
@@ -172,14 +172,14 @@ export default function WorkspacesListPage() {
             </div>
 
             {createError && (
-              <div className="mb-4 bg-red-500/10 border border-red-500/20 rounded-xl p-3 text-red-400 text-sm">
+              <div className="mb-4 rounded-md border border-rose-100 bg-rose-50 p-3 text-sm text-rose-700">
                 {createError}
               </div>
             )}
 
             <form onSubmit={handleCreate} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-1.5">
+                <label className="mb-1.5 block text-sm font-medium text-slate-700">
                   Workspace Name <span className="text-red-400">*</span>
                 </label>
                 <input
@@ -189,13 +189,13 @@ export default function WorkspacesListPage() {
                   onChange={(e) => setCreateForm((f) => ({ ...f, name: e.target.value }))}
                   placeholder="e.g. Alpha Project"
                   maxLength={50}
-                  className="w-full bg-slate-800/60 border border-slate-700 rounded-xl px-4 py-2.5 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/40 transition-all"
+                  className="w-full rounded-md border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none placeholder:text-slate-400 transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-1.5">
-                  Description <span className="text-slate-500 text-xs">(optional)</span>
+                <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                  Description <span className="text-xs text-slate-500">(optional)</span>
                 </label>
                 <textarea
                   id="workspace-description-input"
@@ -204,14 +204,14 @@ export default function WorkspacesListPage() {
                   placeholder="Brief description of this workspace..."
                   maxLength={250}
                   rows={3}
-                  className="w-full bg-slate-800/60 border border-slate-700 rounded-xl px-4 py-2.5 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/40 transition-all resize-none"
+                  className="w-full resize-y rounded-md border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none placeholder:text-slate-400 transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
                 />
               </div>
               <div className="flex space-x-3 pt-2">
                 <button
                   type="button"
                   onClick={() => { setShowCreateModal(false); setCreateError(''); }}
-                  className="flex-1 px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium text-sm transition-all cursor-pointer"
+                  className="flex-1 cursor-pointer rounded-md border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
                 >
                   Cancel
                 </button>
@@ -219,7 +219,7 @@ export default function WorkspacesListPage() {
                   id="create-workspace-submit-btn"
                   type="submit"
                   disabled={creating || !createForm.name.trim()}
-                  className="flex-1 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-sm transition-all cursor-pointer"
+                  className="flex-1 cursor-pointer rounded-md bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {creating ? 'Creating…' : 'Create'}
                 </button>

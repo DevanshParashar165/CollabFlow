@@ -1,260 +1,364 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { logoutUser } from '../features/auth/authSlice';
 import authService from '../features/auth/authService';
+import { createProject, fetchProjects } from '../features/projects/projectSlice';
+import { fetchTasks } from '../features/tasks/taskSlice';
+import { fetchWorkspaces, setSelectedWorkspaceId } from '../features/workspaces/workspaceSlice';
+import ProjectForm from '../features/projects/components/ProjectForm';
+import AppIcon from '../components/common/AppIcon';
+
+const EMPTY_PROJECTS = [];
+
+function MetricCard({ label, value, detail, icon, loading = false }) {
+  return (
+    <article className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-sm font-medium text-slate-600">{label}</p>
+          {loading ? (
+            <div className="mt-3 h-8 w-16 animate-pulse rounded bg-slate-100" aria-label={`Loading ${label.toLowerCase()}`} />
+          ) : (
+            <p className="mt-2 text-2xl font-semibold tracking-tight text-slate-900">{value}</p>
+          )}
+        </div>
+        <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-50 text-indigo-700" aria-hidden="true">
+          <AppIcon name={icon} className="h-4 w-4" />
+        </span>
+      </div>
+      <p className="mt-3 text-xs text-slate-500">{detail}</p>
+    </article>
+  );
+}
+
+function RecentProjectCard({ project, workspaceId, tasks }) {
+  const completedTasks = tasks?.filter((task) => task.status === 'DONE').length ?? 0;
+  const progress = tasks ? (tasks.length ? Math.round((completedTasks / tasks.length) * 100) : 0) : null;
+  const projectPath = `/workspaces/${workspaceId}/projects/${project._id}`;
+
+  return (
+    <article className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-shadow hover:border-indigo-200 hover:shadow-md sm:p-5">
+      <div className="flex items-start justify-between gap-3">
+        <Link to={projectPath} className="min-w-0 text-sm font-semibold text-slate-900 hover:text-indigo-700">
+          <span className="line-clamp-1">{project.name}</span>
+        </Link>
+        {project.status && <span className="shrink-0 rounded-full border border-indigo-100 bg-indigo-50 px-2 py-0.5 text-[11px] font-medium text-indigo-700">{project.status}</span>}
+      </div>
+      <p className="mt-2 min-h-10 line-clamp-2 text-sm leading-5 text-slate-600">
+        {project.description || 'No description provided.'}
+      </p>
+      {progress !== null && (
+        <div className="mt-4">
+          <div className="mb-1.5 flex items-center justify-between text-xs">
+            <span className="text-slate-500">Task progress</span>
+            <span className="font-medium text-slate-700">{progress}%</span>
+          </div>
+          <div
+            className="h-1.5 overflow-hidden rounded-full bg-slate-100"
+            role="progressbar"
+            aria-label={`${project.name} task completion`}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={progress}
+          >
+            <div className="h-full rounded-full bg-indigo-600 transition-[width]" style={{ width: `${progress}%` }} />
+          </div>
+          <p className="mt-1.5 text-[11px] text-slate-500">{completedTasks} of {tasks.length} tasks complete</p>
+        </div>
+      )}
+    </article>
+  );
+}
+
+function EmptyState({ title, message, action }) {
+  return (
+    <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50/70 px-5 py-10 text-center">
+      <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
+      <p className="mx-auto mt-1 max-w-md text-sm text-slate-600">{message}</p>
+      {action}
+    </div>
+  );
+}
 
 export default function DashboardPage() {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
+  const workspaceState = useSelector((state) => state.workspaces);
+  const projectState = useSelector((state) => state.projects);
+  const taskState = useSelector((state) => state.tasks);
+  const [showProjectForm, setShowProjectForm] = useState(false);
+  const [projectSubmitting, setProjectSubmitting] = useState(false);
+  const [projectFormError, setProjectFormError] = useState('');
+  const [testStatus, setTestStatus] = useState({ loading: false, result: null, statusCode: null, error: false });
+  const [failedTaskKeys, setFailedTaskKeys] = useState([]);
+  const requestedTaskKeys = useRef(new Set());
 
-  const [testStatus, setTestStatus] = useState({
-    loading: false,
-    result: null,
-    statusCode: null,
-    error: false,
-  });
+  const { workspaces, selectedWorkspaceId, loading: workspacesLoading, error: workspacesError } = workspaceState;
+  const activeWorkspaceId = workspaces.some((workspace) => workspace._id === selectedWorkspaceId)
+    ? selectedWorkspaceId
+    : workspaces[0]?._id || '';
+  const selectedWorkspace = workspaces.find((workspace) => workspace._id === activeWorkspaceId);
+  const projects = activeWorkspaceId ? projectState.projectsByWorkspace[activeWorkspaceId] : undefined;
+  const projectList = projects || EMPTY_PROJECTS;
+  const canCreateProject = selectedWorkspace?.role === 'OWNER' || selectedWorkspace?.role === 'ADMIN';
 
-  const handleLogout = () => {
-    dispatch(logoutUser());
+  useEffect(() => {
+    if (activeWorkspaceId && activeWorkspaceId !== selectedWorkspaceId) {
+      dispatch(setSelectedWorkspaceId(activeWorkspaceId));
+    }
+  }, [activeWorkspaceId, dispatch, selectedWorkspaceId]);
+
+  useEffect(() => {
+    if (activeWorkspaceId && projects === undefined) {
+      dispatch(fetchProjects(activeWorkspaceId));
+    }
+  }, [activeWorkspaceId, dispatch, projects]);
+
+  useEffect(() => {
+    if (!activeWorkspaceId || projects === undefined) return;
+    projects.forEach((project) => {
+      const key = `${activeWorkspaceId}:${project._id}`;
+      if (taskState.tasksByProject[key] === undefined && !requestedTaskKeys.current.has(key)) {
+        requestedTaskKeys.current.add(key);
+        dispatch(fetchTasks({ workspaceId: activeWorkspaceId, projectId: project._id }))
+          .unwrap()
+          .then(() => setFailedTaskKeys((current) => current.filter((failedKey) => failedKey !== key)))
+          .catch(() => setFailedTaskKeys((current) => current.includes(key) ? current : [...current, key]));
+      }
+    });
+  }, [activeWorkspaceId, dispatch, projects, taskState.tasksByProject]);
+
+  const missingTaskProjects = projects?.filter(
+    (project) => taskState.tasksByProject[`${activeWorkspaceId}:${project._id}`] === undefined
+  ) || [];
+  const taskDataLoaded = projects !== undefined && missingTaskProjects.length === 0;
+  const allTasks = taskDataLoaded
+    ? projects.flatMap((project) => taskState.tasksByProject[`${activeWorkspaceId}:${project._id}`])
+    : [];
+  const completedTaskCount = allTasks.filter((task) => task.status === 'DONE').length;
+  const openTaskCount = allTasks.filter((task) => ['TODO', 'IN_PROGRESS', 'IN_REVIEW'].includes(task.status)).length;
+  const recentProjects = useMemo(() => [...projectList]
+    .sort((first, second) => {
+      const firstDate = first.createdAt ? new Date(first.createdAt).getTime() : 0;
+      const secondDate = second.createdAt ? new Date(second.createdAt).getTime() : 0;
+      return (Number.isFinite(secondDate) ? secondDate : 0) - (Number.isFinite(firstDate) ? firstDate : 0);
+    })
+    .slice(0, 6), [projectList]);
+
+  const handleWorkspaceChange = (event) => {
+    dispatch(setSelectedWorkspaceId(event.target.value));
+  };
+
+  const handleCreateProject = async (projectData) => {
+    if (!activeWorkspaceId) return;
+    setProjectSubmitting(true);
+    setProjectFormError('');
+    try {
+      await dispatch(createProject({ workspaceId: activeWorkspaceId, projectData })).unwrap();
+      setShowProjectForm(false);
+    } catch (error) {
+      setProjectFormError(typeof error === 'string' ? error : 'Unable to create project. Please try again.');
+    } finally {
+      setProjectSubmitting(false);
+    }
+  };
+
+  const retryProjects = () => {
+    if (activeWorkspaceId) dispatch(fetchProjects(activeWorkspaceId));
+  };
+
+  const retryMissingTasks = () => {
+    missingTaskProjects.forEach((project) => {
+      const key = `${activeWorkspaceId}:${project._id}`;
+      requestedTaskKeys.current.delete(key);
+      setFailedTaskKeys((current) => current.filter((failedKey) => failedKey !== key));
+      requestedTaskKeys.current.add(key);
+      dispatch(fetchTasks({ workspaceId: activeWorkspaceId, projectId: project._id }))
+        .unwrap()
+        .then(() => setFailedTaskKeys((current) => current.filter((failedKey) => failedKey !== key)))
+        .catch(() => setFailedTaskKeys((current) => current.includes(key) ? current : [...current, key]));
+    });
   };
 
   const handleTestAdminRoute = async () => {
     setTestStatus({ loading: true, result: null, statusCode: null, error: false });
     try {
       const response = await authService.testAdminRole();
+      setTestStatus({ loading: false, result: response.message || 'Access granted (Admin / Owner role confirmed)', statusCode: 200, error: false });
+    } catch (error) {
       setTestStatus({
         loading: false,
-        result: response.message || 'Access granted (Admin / Owner role confirmed)',
-        statusCode: 200,
-        error: false,
-      });
-    } catch (err) {
-      setTestStatus({
-        loading: false,
-        result:
-          err.response?.data?.message ||
-          'Forbidden: Role lacks permission to access this resource.',
-        statusCode: err.response?.status || 500,
+        result: error.response?.data?.message || 'Forbidden: Role lacks permission to access this resource.',
+        statusCode: error.response?.status || 500,
         error: true,
       });
     }
   };
 
-  // Helper for role badge color styling
-  const getRoleBadgeStyle = (role) => {
-    switch (role) {
-      case 'SUPERADMIN':
-        return 'bg-purple-500/10 text-purple-400 border-purple-500/20';
-      case 'USER':
-      default:
-        return 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20';
-    }
-  };
-
-  const userInitials = user?.name
-    ? user.name
-      .split(' ')
-      .map((n) => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2)
-    : 'U';
+  const firstName = user?.name?.trim().split(/\s+/)[0] || 'there';
+  const tasksUnavailable = missingTaskProjects.some((project) => failedTaskKeys.includes(`${activeWorkspaceId}:${project._id}`));
 
   return (
-    <div className="space-y-8 max-w-5xl mx-auto">
-      {/* Header Profile Section */}
-      <div className="relative overflow-hidden bg-slate-900/60 backdrop-blur-xl border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-600/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20"></div>
-
-        <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-          <div className="flex items-center space-x-5">
-            <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-600 flex items-center justify-center text-white font-bold text-2xl sm:text-3xl shadow-lg shadow-indigo-500/25 border border-white/10">
-              {userInitials}
-            </div>
-            <div>
-              <div className="flex items-center space-x-3">
-                <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
-                  {user?.name || 'CollabFlow User'}
-                </h1>
-                <span
-                  id="user-role-badge"
-                  className={`text-xs px-3 py-1 rounded-full font-semibold border ${getRoleBadgeStyle(
-                    user?.platformRole
-                  )}`}
-                >
-                  {user?.platformRole || 'USER'}
-                </span>
-              </div>
-              <p className="text-slate-400 text-sm mt-1">{user?.email}</p>
-              <p className="text-xs text-slate-500 mt-1">
-                Joined: {user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'Active'}
-              </p>
-            </div>
-          </div>
-
-          <button
-            id="dashboard-logout-btn"
-            onClick={handleLogout}
-            className="px-5 py-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700/80 font-medium text-sm transition-all duration-200 cursor-pointer flex items-center space-x-2"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-              />
-            </svg>
-            <span>Sign Out</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Grid of Status & Security Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Authentication State Card */}
-        <div className="bg-slate-900/50 backdrop-blur-md border border-slate-800/80 rounded-2xl p-6 space-y-4">
-          <div className="flex items-center space-x-3 text-indigo-400">
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-              />
-            </svg>
-            <h2 className="text-base font-semibold text-white">Active Session Details</h2>
-          </div>
-
-          <div className="space-y-3 text-sm">
-            <div className="flex justify-between py-2 border-b border-slate-800">
-              <span className="text-slate-400">User ID</span>
-              <span className="font-mono text-slate-200 text-xs">{user?._id || user?.id}</span>
-            </div>
-            <div className="flex justify-between py-2 border-b border-slate-800">
-              <span className="text-slate-400">Authentication Method</span>
-              <span className="text-slate-200 font-medium">JWT (HTTP-Only Cookie)</span>
-            </div>
-            <div className="flex justify-between py-2 border-b border-slate-800">
-              <span className="text-slate-400">Token Storage</span>
-              <span className="text-emerald-400 font-medium text-xs">Secure / Inaccessible to JS</span>
-            </div>
-            <div className="flex justify-between py-2">
-              <span className="text-slate-400">Platform Role</span>
-              <span className="text-indigo-400 font-semibold">{user?.platformRole || 'USER'}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Privilege Escalation Defense Card */}
-        <div className="bg-slate-900/50 backdrop-blur-md border border-slate-800/80 rounded-2xl p-6 space-y-4">
-          <div className="flex items-center space-x-3 text-violet-400">
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-              />
-            </svg>
-            <h2 className="text-base font-semibold text-white">Role Security & Boundaries</h2>
-          </div>
-
-          <p className="text-xs text-slate-400 leading-relaxed">
-            All self-registered users receive the <strong className="text-slate-200">USER</strong> platform role by default.
-            CollabFlow ignores any client-supplied platform role during registration, preventing users from granting themselves elevated privileges.
+    <div className="mx-auto w-full max-w-6xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
+      <section className="flex flex-col justify-between gap-5 rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:flex-row sm:items-center sm:p-6">
+        <div className="min-w-0">
+          <p className="text-sm font-medium text-indigo-700">Overview</p>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">Welcome back, {firstName}</h1>
+          <p className="mt-1 text-sm text-slate-600">
+            {selectedWorkspace ? `A snapshot of ${selectedWorkspace.name}.` : 'Choose a workspace to see your projects and team progress.'}
           </p>
-
-          <div className="bg-slate-950/60 rounded-xl p-3 border border-slate-800 text-xs text-slate-300">
-            <div className="flex items-center space-x-2 text-indigo-400 font-medium mb-1">
-              <span>Next Phase (Workspaces):</span>
-            </div>
-            When a user creates an organizational workspace in Phase 3, they will automatically be assigned as that workspace&apos;s OWNER through trusted server workflows.
-          </div>
         </div>
-      </div>
+        <div className="flex flex-wrap items-center gap-2">
+          {workspaces.length > 0 && (
+            <label className="sr-only" htmlFor="dashboard-workspace-select">Selected workspace</label>
+          )}
+          {workspaces.length > 0 && (
+            <select
+              id="dashboard-workspace-select"
+              value={activeWorkspaceId}
+              onChange={handleWorkspaceChange}
+              className="h-10 min-w-40 rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
+            >
+              {workspaces.map((workspace) => <option key={workspace._id} value={workspace._id}>{workspace.name}</option>)}
+            </select>
+          )}
+          <Link to="/workspaces" className="inline-flex h-10 items-center justify-center rounded-md border border-slate-200 bg-white px-3.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50">
+            View Workspaces
+          </Link>
+          {canCreateProject && (
+            <button type="button" onClick={() => { setProjectFormError(''); setShowProjectForm(true); }} className="inline-flex h-10 items-center justify-center rounded-md bg-indigo-600 px-3.5 text-sm font-medium text-white transition-colors hover:bg-indigo-700">
+              Create Project
+            </button>
+          )}
+        </div>
+      </section>
 
-      {/* Interactive RBAC Verification Card */}
-      <div className="bg-slate-900/50 backdrop-blur-md border border-slate-800/80 rounded-2xl p-6 sm:p-8 space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h2 className="text-lg font-semibold text-white">Role-Based Authorization (RBAC) Test</h2>
-            <p className="text-sm text-slate-400 mt-1">
-              Verify backend authorization enforcement against <code className="text-indigo-400 text-xs font-mono">GET /api/auth/admin-test</code> (Requires OWNER or ADMIN).
-            </p>
-          </div>
+      {workspacesError && workspaces.length > 0 && (
+        <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+          <span>{workspacesError}</span>
+          <button type="button" onClick={() => dispatch(fetchWorkspaces())} className="font-medium underline underline-offset-2">Retry</button>
+        </div>
+      )}
 
-          <button
-            id="test-rbac-btn"
-            onClick={handleTestAdminRoute}
-            disabled={testStatus.loading}
-            className="px-4 py-2.5 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 text-sm font-medium transition-all duration-200 disabled:opacity-50 flex items-center justify-center space-x-2 cursor-pointer whitespace-nowrap"
-          >
-            {testStatus.loading ? (
-              <>
-                <div className="w-4 h-4 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin"></div>
-                <span>Testing...</span>
-              </>
+      {workspaces.length === 0 ? (
+        workspacesLoading ? (
+          <div className="flex min-h-48 items-center justify-center rounded-xl border border-slate-200 bg-white text-sm text-slate-500" role="status">Loading your workspaces…</div>
+        ) : workspacesError ? (
+          <EmptyState
+            title="Workspaces could not be loaded"
+            message={workspacesError}
+            action={<button type="button" onClick={() => dispatch(fetchWorkspaces())} className="mt-4 rounded-md border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">Retry</button>}
+          />
+        ) : (
+          <EmptyState
+            title="No workspaces yet"
+            message="Create or join a workspace to see projects and task progress here."
+            action={<Link to="/workspaces" className="mt-4 inline-flex rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700">Go to Workspaces</Link>}
+          />
+        )
+      ) : (
+        <>
+          {projects !== undefined ? (
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              <MetricCard label="Projects" value={projects.length} detail="In this workspace" icon="folder" />
+              {taskDataLoaded ? (
+                <>
+                  <MetricCard label="Total tasks" value={allTasks.length} detail="Across workspace projects" icon="grid" />
+                  <MetricCard label="Completed" value={completedTaskCount} detail="Tasks marked done" icon="check" />
+                  <MetricCard label="Pending / in progress" value={openTaskCount} detail="To do, in progress, or review" icon="inbox" />
+                </>
+              ) : !tasksUnavailable && (
+                <>
+                  <MetricCard label="Total tasks" detail="Loading task data" icon="grid" loading />
+                  <MetricCard label="Completed" detail="Loading task data" icon="check" loading />
+                  <MetricCard label="Pending / in progress" detail="Loading task data" icon="inbox" loading />
+                </>
+              )}
+            </div>
+          ) : projectState.error ? (
+            <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+              <span>{projectState.error}</span>
+              <button type="button" onClick={retryProjects} className="font-medium underline underline-offset-2">Retry</button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4" aria-label="Loading dashboard metrics">
+              {[0, 1, 2, 3].map((item) => <MetricCard key={item} label="Loading" value={null} detail="Preparing overview" icon="·" loading />)}
+            </div>
+          )}
+
+          {tasksUnavailable && (
+            <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+              <span>Some task totals could not be loaded. Metrics are withheld, and progress appears only for projects whose task lists loaded.</span>
+              <button type="button" onClick={retryMissingTasks} className="font-medium underline underline-offset-2">Retry task data</button>
+            </div>
+          )}
+
+          <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <div>
+                <h2 className="text-base font-semibold text-slate-900">Recent projects</h2>
+                <p className="mt-1 text-xs text-slate-500">Latest projects in {selectedWorkspace?.name || 'this workspace'}</p>
+              </div>
+              {activeWorkspaceId && projectList.length > 0 && (
+                <Link to={`/workspaces/${activeWorkspaceId}/projects`} className="shrink-0 text-sm font-medium text-indigo-700 hover:text-indigo-800">All projects</Link>
+              )}
+            </div>
+            {projects === undefined && !projectState.error ? (
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3" aria-label="Loading projects">
+                {[0, 1, 2].map((item) => <div key={item} className="h-36 animate-pulse rounded-lg border border-slate-100 bg-slate-50" />)}
+              </div>
+            ) : projects === undefined ? (
+              <EmptyState title="Projects could not be loaded" message={projectState.error} action={<button type="button" onClick={retryProjects} className="mt-3 text-sm font-medium text-indigo-700">Retry</button>} />
+            ) : recentProjects.length ? (
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+                {recentProjects.map((project) => (
+                  <RecentProjectCard
+                    key={project._id}
+                    project={project}
+                    workspaceId={activeWorkspaceId}
+                    tasks={taskState.tasksByProject[`${activeWorkspaceId}:${project._id}`]}
+                  />
+                ))}
+              </div>
             ) : (
-              <>
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M13 10V3L4 14h7v7l9-11h-7z"
-                  />
-                </svg>
-                <span>Test Role Endpoint</span>
-              </>
+              <EmptyState
+                title="No projects in this workspace"
+                message="Create a project to start organizing work for your team."
+                action={canCreateProject ? <button type="button" onClick={() => setShowProjectForm(true)} className="mt-4 rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700">Create Project</button> : null}
+              />
             )}
-          </button>
-        </div>
+          </section>
+        </>
+      )}
 
-        {/* Live Test Feedback Banner */}
-        {testStatus.result && (
-          <div
-            id="rbac-test-result"
-            className={`p-4 rounded-xl border text-sm flex items-start space-x-3 transition-all duration-200 ${testStatus.error
-              ? 'bg-amber-500/10 border-amber-500/20 text-amber-300'
-              : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300'
-              }`}
-          >
-            <div className="flex-shrink-0 mt-0.5">
-              {testStatus.error ? (
-                <svg className="w-5 h-5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                  />
-                </svg>
-              ) : (
-                <svg className="w-5 h-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              )}
+      {/* Activity is tracked per task; there is no workspace-level activity feed endpoint in the current client API. */}
+      <details className="rounded-lg border border-slate-200 bg-white px-4 py-3 shadow-sm">
+        <summary className="cursor-pointer text-sm font-medium text-slate-700">Advanced access check</summary>
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-3">
+          <p className="text-xs text-slate-500">Verify the existing role-protected test endpoint for this session.</p>
+          <button type="button" id="test-rbac-btn" onClick={handleTestAdminRoute} disabled={testStatus.loading} className="rounded-md border border-indigo-200 bg-indigo-50 px-3 py-2 text-xs font-medium text-indigo-700 hover:bg-indigo-100 disabled:opacity-50">
+            {testStatus.loading ? 'Checking…' : 'Test access'}
+          </button>
+          {testStatus.result && (
+            <p role="status" className={`w-full text-xs ${testStatus.error ? 'text-amber-800' : 'text-emerald-700'}`}>
+              {testStatus.statusCode}: {testStatus.result}
+            </p>
+          )}
+        </div>
+      </details>
+
+      {showProjectForm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/35 p-4 backdrop-blur-[2px]">
+          <div role="dialog" aria-modal="true" aria-labelledby="dashboard-project-form-title" className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-xl border border-slate-200 bg-white p-5 shadow-xl sm:p-6">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <h2 id="dashboard-project-form-title" className="text-lg font-semibold text-slate-900">Create Project</h2>
+              <button type="button" onClick={() => setShowProjectForm(false)} aria-label="Close create project form" className="rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700">×</button>
             </div>
-            <div>
-              <p className="font-semibold">
-                Status: {testStatus.statusCode} {testStatus.error ? 'Forbidden' : 'OK'}
-              </p>
-              <p className="mt-0.5 text-xs opacity-90">{testStatus.result}</p>
-              {testStatus.error && (
-                <p className="mt-1 text-[11px] text-amber-200/80">
-                  Expected outcome: The backend <code className="font-mono text-xs">authorizeRoles</code> middleware successfully verified that your role ({user?.platformRole}) does not have administrative rights, protecting the route.
-                </p>
-              )}
-            </div>
+            {projectFormError && <p role="alert" className="mb-4 rounded-md border border-rose-100 bg-rose-50 px-3 py-2 text-sm text-rose-700">{projectFormError}</p>}
+            <ProjectForm initialProject={null} onSubmit={handleCreateProject} onCancel={() => setShowProjectForm(false)} submitting={projectSubmitting} />
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

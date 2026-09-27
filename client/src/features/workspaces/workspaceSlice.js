@@ -104,6 +104,7 @@ export const removeMember = createAsyncThunk(
 
 const initialState = {
   workspaces: [],
+  selectedWorkspaceId: null,
   currentWorkspace: null,
   members: [],
   loading: false,
@@ -116,6 +117,9 @@ const workspaceSlice = createSlice({
   reducers: {
     clearWorkspaceError: (state) => {
       state.error = null;
+    },
+    setSelectedWorkspaceId: (state, action) => {
+      state.selectedWorkspaceId = action.payload;
     },
     clearCurrentWorkspace: (state) => {
       state.currentWorkspace = null;
@@ -132,6 +136,9 @@ const workspaceSlice = createSlice({
       .addCase(fetchWorkspaces.fulfilled, (state, action) => {
         state.loading = false;
         state.workspaces = action.payload;
+        if (!state.workspaces.some((workspace) => workspace._id === state.selectedWorkspaceId)) {
+          state.selectedWorkspaceId = state.workspaces[0]?._id || null;
+        }
       })
       .addCase(fetchWorkspaces.rejected, (state, action) => {
         state.loading = false;
@@ -146,6 +153,7 @@ const workspaceSlice = createSlice({
       .addCase(fetchWorkspace.fulfilled, (state, action) => {
         state.loading = false;
         state.currentWorkspace = action.payload;
+        state.selectedWorkspaceId = action.payload._id;
       })
       .addCase(fetchWorkspace.rejected, (state, action) => {
         state.loading = false;
@@ -160,6 +168,7 @@ const workspaceSlice = createSlice({
       .addCase(createNewWorkspace.fulfilled, (state, action) => {
         state.loading = false;
         state.workspaces.unshift(action.payload);
+        if (!state.selectedWorkspaceId) state.selectedWorkspaceId = action.payload._id;
       })
       .addCase(createNewWorkspace.rejected, (state, action) => {
         state.loading = false;
@@ -180,6 +189,9 @@ const workspaceSlice = createSlice({
       // removeExistingWorkspace
       .addCase(removeExistingWorkspace.fulfilled, (state, action) => {
         state.workspaces = state.workspaces.filter((w) => w._id !== action.payload);
+        if (state.selectedWorkspaceId === action.payload) {
+          state.selectedWorkspaceId = state.workspaces[0]?._id || null;
+        }
         if (state.currentWorkspace?._id === action.payload) {
           state.currentWorkspace = null;
           state.members = [];
@@ -219,5 +231,5 @@ const workspaceSlice = createSlice({
   },
 });
 
-export const { clearWorkspaceError, clearCurrentWorkspace } = workspaceSlice.actions;
+export const { clearWorkspaceError, clearCurrentWorkspace, setSelectedWorkspaceId } = workspaceSlice.actions;
 export default workspaceSlice.reducer;

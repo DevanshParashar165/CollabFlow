@@ -15,11 +15,11 @@ const ROLES = ['OWNER', 'ADMIN', 'MEMBER', 'VIEWER'];
 
 const roleBadge = (role) => {
   switch (role) {
-    case 'OWNER': return 'bg-amber-500/10 text-amber-400 border-amber-500/20';
-    case 'ADMIN': return 'bg-purple-500/10 text-purple-400 border-purple-500/20';
-    case 'MEMBER': return 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20';
-    case 'VIEWER': return 'bg-slate-500/10 text-slate-400 border-slate-500/20';
-    default: return 'bg-slate-500/10 text-slate-400 border-slate-500/20';
+    case 'OWNER': return 'bg-amber-50 text-amber-700 border-amber-200';
+    case 'ADMIN': return 'bg-purple-50 text-purple-700 border-purple-200';
+    case 'MEMBER': return 'bg-indigo-50 text-indigo-700 border-indigo-200';
+    case 'VIEWER': return 'bg-slate-50 text-slate-600 border-slate-200';
+    default: return 'bg-slate-50 text-slate-600 border-slate-200';
   }
 };
 
@@ -91,7 +91,7 @@ export default function WorkspaceDetailPage() {
 
   if (loading && !currentWorkspace) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+      <div className="flex min-h-[50vh] items-center justify-center">
         <div className="relative w-10 h-10">
           <div className="absolute inset-0 rounded-full border-2 border-indigo-500/20"></div>
           <div className="absolute inset-0 rounded-full border-2 border-indigo-500 border-t-transparent animate-spin"></div>
@@ -102,10 +102,10 @@ export default function WorkspaceDetailPage() {
 
   if (error && !currentWorkspace) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+      <div className="flex min-h-[50vh] items-center justify-center">
         <div className="text-center">
-          <p className="text-red-400 mb-4">{error}</p>
-          <button onClick={() => navigate('/workspaces')} className="text-indigo-400 hover:text-indigo-300 text-sm cursor-pointer">
+          <p className="mb-4 text-sm text-rose-700">{error}</p>
+          <button onClick={() => navigate('/workspaces')} className="cursor-pointer text-sm font-medium text-indigo-700 hover:text-indigo-800">
             ← Back to Workspaces
           </button>
         </div>
@@ -114,12 +114,12 @@ export default function WorkspaceDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white">
-      <div className="max-w-4xl mx-auto px-6 py-10">
+    <div className="w-full text-slate-900">
+      <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
         {/* Back nav */}
         <button
           onClick={() => navigate('/workspaces')}
-          className="flex items-center space-x-1 text-slate-400 hover:text-white text-sm mb-6 transition-colors cursor-pointer"
+          className="mb-5 flex cursor-pointer items-center space-x-1 text-sm font-medium text-slate-500 transition-colors hover:text-indigo-700"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
@@ -129,17 +129,17 @@ export default function WorkspaceDetailPage() {
 
         {/* Workspace header */}
         {currentWorkspace && (
-          <div className="bg-slate-900/60 backdrop-blur-md border border-slate-800/80 rounded-2xl p-6 mb-6">
+          <div className="mb-5 rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
-                <div className="w-14 h-14 rounded-2xl bg-linear-to-tr from-indigo-600 to-violet-600 flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-indigo-500/25">
+                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-indigo-50 text-lg font-semibold text-indigo-700">
                   {currentWorkspace.name?.[0]?.toUpperCase() || 'W'}
                 </div>
                 <div>
-                  <h1 className="text-2xl font-bold text-white">{currentWorkspace.name}</h1>
-                  <p className="text-slate-400 text-sm">/{currentWorkspace.slug}</p>
+                  <h1 className="text-2xl font-semibold tracking-tight text-slate-900">{currentWorkspace.name}</h1>
+                  <p className="text-sm text-slate-500">/{currentWorkspace.slug}</p>
                   {currentWorkspace.description && (
-                    <p className="text-slate-400 text-sm mt-1">{currentWorkspace.description}</p>
+                    <p className="mt-1 text-sm text-slate-600">{currentWorkspace.description}</p>
                   )}
                 </div>
               </div>
@@ -152,20 +152,20 @@ export default function WorkspaceDetailPage() {
 
         {/* Action error */}
         {actionError && (
-          <div className="mb-5 bg-red-500/10 border border-red-500/20 rounded-xl p-3 text-red-400 text-sm">
+          <div className="mb-5 rounded-md border border-rose-100 bg-rose-50 p-3 text-sm text-rose-700">
             {actionError}
           </div>
         )}
 
-        <div className="bg-slate-900/60 backdrop-blur-md border border-slate-800/80 rounded-2xl p-6 mb-6">
+        <div className="mb-5 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-lg font-semibold text-white">Projects</h2>
+              <h2 className="text-base font-semibold text-slate-900">Projects</h2>
               <p className="text-slate-500 text-xs mt-0.5">Plan and track work in this workspace</p>
             </div>
             <button
               onClick={() => navigate(`/workspaces/${workspaceId}/projects`)}
-              className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-sm cursor-pointer"
+              className="cursor-pointer rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
             >
               View Projects
             </button>
@@ -173,17 +173,17 @@ export default function WorkspaceDetailPage() {
         </div>
 
         {/* Members section */}
-        <div className="bg-slate-900/60 backdrop-blur-md border border-slate-800/80 rounded-2xl p-6">
+        <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
           <div className="flex items-center justify-between mb-5">
             <div>
-              <h2 className="text-lg font-semibold text-white">Members</h2>
+              <h2 className="text-base font-semibold text-slate-900">Members</h2>
               <p className="text-slate-500 text-xs mt-0.5">{members.length} member{members.length !== 1 ? 's' : ''}</p>
             </div>
             {canManageMembers && (
               <button
                 id="add-member-btn"
                 onClick={() => setShowAddMember(true)}
-                className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-sm transition-all cursor-pointer flex items-center space-x-1.5"
+                className="flex cursor-pointer items-center space-x-1.5 rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-700"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
@@ -203,14 +203,14 @@ export default function WorkspaceDetailPage() {
               return (
                 <div
                   key={m._id}
-                  className="flex items-center justify-between py-3 px-4 rounded-xl bg-slate-800/40 border border-slate-700/40"
+                  className="flex items-center justify-between rounded-md border border-slate-100 bg-slate-50 px-4 py-3"
                 >
                   <div className="flex items-center space-x-3">
-                    <div className="w-9 h-9 rounded-full bg-indigo-600/30 border border-indigo-500/40 flex items-center justify-center text-indigo-300 font-bold text-sm">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-full border border-indigo-100 bg-indigo-50 text-sm font-semibold text-indigo-700">
                       {memberUser.name?.[0]?.toUpperCase() || 'U'}
                     </div>
                     <div>
-                      <p className="text-white font-medium text-sm">
+                      <p className="text-sm font-medium text-slate-900">
                         {memberUser.name || 'Unknown User'} {isMe && <span className="text-slate-500 text-xs">(you)</span>}
                       </p>
                       <p className="text-slate-500 text-xs">{memberUser.email || ''}</p>
@@ -222,7 +222,7 @@ export default function WorkspaceDetailPage() {
                       <select
                         value={m.role}
                         onChange={(e) => handleRoleChange(m._id, memberUser._id, e.target.value)}
-                        className="text-xs bg-slate-700 border border-slate-600 rounded-lg px-2 py-1.5 text-white focus:outline-none focus:border-indigo-500 cursor-pointer"
+                        className="cursor-pointer rounded-md border border-slate-200 bg-white px-2 py-1.5 text-xs text-slate-700 outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
                         onClick={(e) => e.stopPropagation()}
                       >
                         {ROLES.filter((r) => {
@@ -240,7 +240,7 @@ export default function WorkspaceDetailPage() {
                     {canEdit && (
                       <button
                         onClick={() => handleRemoveMember(memberUser._id)}
-                        className="p-1.5 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-all cursor-pointer"
+                        className="cursor-pointer rounded-md p-1.5 text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-600"
                         title="Remove member"
                       >
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -258,11 +258,11 @@ export default function WorkspaceDetailPage() {
 
       {/* Add Member Modal */}
       {showAddMember && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-md shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/35 p-4 backdrop-blur-[2px]">
+          <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-xl border border-slate-200 bg-white p-5 shadow-xl sm:p-6">
             <div className="flex items-center justify-between mb-5">
-              <h2 className="text-xl font-bold text-white">Add Member</h2>
-              <button onClick={() => { setShowAddMember(false); setAddError(''); }} className="text-slate-500 hover:text-white cursor-pointer">
+              <h2 className="text-lg font-semibold text-slate-900">Add Member</h2>
+              <button onClick={() => { setShowAddMember(false); setAddError(''); }} className="cursor-pointer text-slate-400 hover:text-slate-700">
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
@@ -270,31 +270,31 @@ export default function WorkspaceDetailPage() {
             </div>
 
             {addError && (
-              <div className="mb-4 bg-red-500/10 border border-red-500/20 rounded-xl p-3 text-red-400 text-sm">
+              <div className="mb-4 rounded-md border border-rose-100 bg-rose-50 p-3 text-sm text-rose-700">
                 {addError}
               </div>
             )}
 
             <form onSubmit={handleAddMember} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-1.5">Email Address <span className="text-red-400">*</span></label>
+                <label className="mb-1.5 block text-sm font-medium text-slate-700">Email Address <span className="text-rose-600">*</span></label>
                 <input
                   id="add-member-email-input"
                   type="email"
                   value={addForm.email}
                   onChange={(e) => setAddForm((f) => ({ ...f, email: e.target.value }))}
                   placeholder="member@example.com"
-                  className="w-full bg-slate-800/60 border border-slate-700 rounded-xl px-4 py-2.5 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-indigo-500"
+                  className="w-full rounded-md border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none placeholder:text-slate-400 focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-1.5">Role</label>
+                <label className="mb-1.5 block text-sm font-medium text-slate-700">Role</label>
                 <select
                   id="add-member-role-select"
                   value={addForm.role}
                   onChange={(e) => setAddForm((f) => ({ ...f, role: e.target.value }))}
-                  className="w-full bg-slate-800/60 border border-slate-700 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-indigo-500 cursor-pointer"
+                  className="w-full cursor-pointer rounded-md border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
                 >
                   {ROLES.filter((r) => {
                     if (isAdmin && (r === 'OWNER' || r === 'ADMIN')) return false;
@@ -305,14 +305,14 @@ export default function WorkspaceDetailPage() {
                 </select>
               </div>
               <div className="flex space-x-3 pt-2">
-                <button type="button" onClick={() => { setShowAddMember(false); setAddError(''); }} className="flex-1 px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium text-sm cursor-pointer">
+                <button type="button" onClick={() => { setShowAddMember(false); setAddError(''); }} className="flex-1 cursor-pointer rounded-md border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50">
                   Cancel
                 </button>
                 <button
                   id="add-member-submit-btn"
                   type="submit"
                   disabled={adding}
-                  className="flex-1 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-semibold text-sm cursor-pointer"
+                  className="flex-1 cursor-pointer rounded-md bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
                 >
                   {adding ? 'Adding…' : 'Add Member'}
                 </button>

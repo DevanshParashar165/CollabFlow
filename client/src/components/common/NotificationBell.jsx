@@ -21,8 +21,8 @@ export default function NotificationBell() {
         title="Notifications"
         className={`relative p-2 rounded-lg transition-all duration-200 cursor-pointer ${
           isOpen
-            ? 'bg-slate-800 text-white'
-            : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+            ? 'bg-indigo-50 text-indigo-700'
+            : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
         }`}
       >
         {/* Bell SVG */}
@@ -44,7 +44,7 @@ export default function NotificationBell() {
         {unreadCount > 0 && (
           <span
             id="notification-badge"
-            className="absolute -top-1 -right-1 flex h-4 min-w-[16px] px-1 items-center justify-center rounded-full bg-indigo-500 text-[10px] font-bold text-white shadow-sm shadow-indigo-500/50 animate-pulse"
+            className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full border-2 border-white bg-indigo-600 px-1 text-[10px] font-bold text-white"
           >
             {unreadCount > 99 ? '99+' : unreadCount}
           </span>
