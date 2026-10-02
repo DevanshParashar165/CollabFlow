@@ -2,7 +2,10 @@ import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import taskService from './taskService';
 
 const keyFor = (workspaceId, projectId) => `${workspaceId}:${projectId}`;
-const getError = (error) => error.response?.data?.message || error.message || 'Request failed';
+const getError = (error) => error.response?.data?.message
+  || (error.code === 'ERR_NETWORK' ? 'Network error. Check your connection and try again.' : null)
+  || error.message
+  || 'Request failed';
 
 export const fetchTasks = createAsyncThunk('tasks/fetchTasks', async ({ workspaceId, projectId }, { rejectWithValue }) => {
   try { return { workspaceId, projectId, tasks: await taskService.listTasks(workspaceId, projectId) }; }
@@ -19,8 +22,8 @@ export const createTask = createAsyncThunk('tasks/createTask', async ({ workspac
   catch (error) { return rejectWithValue(getError(error)); }
 });
 
-export const updateTask = createAsyncThunk('tasks/updateTask', async ({ workspaceId, projectId, taskId, taskData }, { rejectWithValue }) => {
-  try { return { workspaceId, projectId, task: await taskService.updateTask(workspaceId, projectId, taskId, taskData) }; }
+export const updateTask = createAsyncThunk('tasks/updateTask', async ({ workspaceId, projectId, taskId, taskData, moveId }, { rejectWithValue }) => {
+  try { return { workspaceId, projectId, taskId, taskData, moveId, task: await taskService.updateTask(workspaceId, projectId, taskId, taskData) }; }
   catch (error) { return rejectWithValue(getError(error)); }
 });
 
@@ -29,7 +32,7 @@ export const deleteTask = createAsyncThunk('tasks/deleteTask', async ({ workspac
   catch (error) { return rejectWithValue(getError(error)); }
 });
 
-const initialState = { tasksByProject: {}, currentTask: null, currentContext: null, loading: false, error: null };
+const initialState = { tasksByProject: {}, currentTask: null, currentContext: null, pendingStatusMoves: {}, loading: false, error: null };
 
 const taskSlice = createSlice({
   name: 'tasks',
@@ -37,6 +40,28 @@ const taskSlice = createSlice({
   reducers: {
     clearTaskError: (state) => { state.error = null; },
     clearCurrentTask: (state) => { state.currentTask = null; state.currentContext = null; },
+    taskStatusMoveOptimistic: (state, action) => {
+      const { workspaceId, projectId, taskId, fromStatus, toStatus, moveId } = action.payload;
+      const key = keyFor(workspaceId, projectId);
+      const task = state.tasksByProject[key]?.find((item) => item._id === taskId);
+      if (!task || task.status !== fromStatus) return;
+      state.pendingStatusMoves[`${key}:${taskId}`] = { moveId, fromStatus, toStatus, socketConfirmed: false, superseded: false };
+      task.status = toStatus;
+      if (state.currentContext === key && state.currentTask?._id === taskId) state.currentTask.status = toStatus;
+    },
+    taskStatusMoveRolledBack: (state, action) => {
+      const { workspaceId, projectId, taskId, moveId } = action.payload;
+      const key = keyFor(workspaceId, projectId);
+      const pendingKey = `${key}:${taskId}`;
+      const pending = state.pendingStatusMoves[pendingKey];
+      if (!pending || pending.moveId !== moveId) return;
+      const task = state.tasksByProject[key]?.find((item) => item._id === taskId);
+      if (task && !pending.socketConfirmed && !pending.superseded && task.status === pending.toStatus) {
+        task.status = pending.fromStatus;
+        if (state.currentContext === key && state.currentTask?._id === taskId) state.currentTask.status = pending.fromStatus;
+      }
+      delete state.pendingStatusMoves[pendingKey];
+    },
     taskCreatedFromSocket: (state, action) => {
       const { workspaceId, projectId, taskId, ...task } = action.payload;
       const key = keyFor(workspaceId, projectId); const list = state.tasksByProject[key] || [];
@@ -49,8 +74,13 @@ const taskSlice = createSlice({
     },
     taskStatusChangedFromSocket: (state, action) => {
       const { workspaceId, projectId, taskId, newStatus } = action.payload; const key = keyFor(workspaceId, projectId);
-      state.tasksByProject[key] = (state.tasksByProject[key] || []).map((item) => item._id === taskId ? { ...item, status: newStatus } : item);
-      if (state.currentTask?._id === taskId) state.currentTask.status = newStatus;
+      const task = state.tasksByProject[key]?.find((item) => item._id === taskId);
+      const pendingKey = `${key}:${taskId}`;
+      const pending = state.pendingStatusMoves[pendingKey];
+      if (pending && newStatus === pending.toStatus) pending.socketConfirmed = true;
+      else if (pending) pending.superseded = true;
+      if (task && task.status !== newStatus) task.status = newStatus;
+      if (state.currentContext === key && state.currentTask?._id === taskId && state.currentTask.status !== newStatus) state.currentTask.status = newStatus;
     },
     taskAssignedFromSocket: (state, action) => {
       const { workspaceId, projectId, taskId, newAssignee } = action.payload; const key = keyFor(workspaceId, projectId);
@@ -59,6 +89,7 @@ const taskSlice = createSlice({
     },
     taskDeletedFromSocket: (state, action) => {
       const { workspaceId, projectId, taskId } = action.payload; const key = keyFor(workspaceId, projectId);
+      delete state.pendingStatusMoves[`${key}:${taskId}`];
       state.tasksByProject[key] = (state.tasksByProject[key] || []).filter((item) => item._id !== taskId);
       if (state.currentTask?._id === taskId) state.currentTask = null;
     },
@@ -90,10 +121,28 @@ const taskSlice = createSlice({
           state.tasksByProject[key] = [task, ...list];
         }
       })
-      .addCase(updateTask.fulfilled, (state, action) => { const key = keyFor(action.payload.workspaceId, action.payload.projectId); state.tasksByProject[key] = (state.tasksByProject[key] || []).map((task) => task._id === action.payload.task._id ? action.payload.task : task); if (state.currentTask?._id === action.payload.task._id) state.currentTask = action.payload.task; })
-      .addCase(deleteTask.fulfilled, (state, action) => { const key = keyFor(action.payload.workspaceId, action.payload.projectId); state.tasksByProject[key] = (state.tasksByProject[key] || []).filter((task) => task._id !== action.payload.taskId); if (state.currentTask?._id === action.payload.taskId) state.currentTask = null; });
+      .addCase(updateTask.fulfilled, (state, action) => {
+        const { workspaceId, projectId, taskId, taskData, moveId, task: updatedTask } = action.payload;
+        const key = keyFor(workspaceId, projectId);
+        const pendingKey = `${key}:${taskId}`;
+        const pending = state.pendingStatusMoves[pendingKey];
+        const task = { ...updatedTask };
+        if (moveId && pending?.moveId === moveId) {
+          if (pending.superseded) {
+            const currentTask = state.tasksByProject[key]?.find((item) => item._id === taskId);
+            if (currentTask) task.status = currentTask.status;
+          }
+          delete state.pendingStatusMoves[pendingKey];
+        } else if (taskData.status === undefined) {
+          const currentTask = state.tasksByProject[key]?.find((item) => item._id === taskId);
+          if (currentTask?.status !== undefined) task.status = currentTask.status;
+        }
+        state.tasksByProject[key] = (state.tasksByProject[key] || []).map((item) => item._id === taskId ? task : item);
+        if (state.currentContext === key && state.currentTask?._id === taskId) state.currentTask = task;
+      })
+      .addCase(deleteTask.fulfilled, (state, action) => { const key = keyFor(action.payload.workspaceId, action.payload.projectId); delete state.pendingStatusMoves[`${key}:${action.payload.taskId}`]; state.tasksByProject[key] = (state.tasksByProject[key] || []).filter((task) => task._id !== action.payload.taskId); if (state.currentTask?._id === action.payload.taskId) state.currentTask = null; });
   },
 });
 
-export const { clearTaskError, clearCurrentTask, taskCreatedFromSocket, taskUpdatedFromSocket, taskStatusChangedFromSocket, taskAssignedFromSocket, taskDeletedFromSocket } = taskSlice.actions;
+export const { clearTaskError, clearCurrentTask, taskStatusMoveOptimistic, taskStatusMoveRolledBack, taskCreatedFromSocket, taskUpdatedFromSocket, taskStatusChangedFromSocket, taskAssignedFromSocket, taskDeletedFromSocket } = taskSlice.actions;
 export default taskSlice.reducer;
