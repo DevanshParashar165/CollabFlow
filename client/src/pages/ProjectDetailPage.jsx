@@ -3,9 +3,9 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
 import { fetchMembers, fetchWorkspace } from '../features/workspaces/workspaceSlice';
 import { clearCurrentProject, fetchProject } from '../features/projects/projectSlice';
-import { createTask, deleteTask, fetchTasks, updateTask } from '../features/tasks/taskSlice';
+import { createTask, deleteTask, fetchTasks, taskStatusMoveOptimistic, taskStatusMoveRolledBack, updateTask } from '../features/tasks/taskSlice';
 import TaskForm from '../features/tasks/components/TaskForm';
-import TaskList from '../features/tasks/components/TaskList';
+import KanbanBoard from '../features/tasks/components/kanban/KanbanBoard';
 import useWorkspaceSocket from '../hooks/useWorkspaceSocket';
 
 const taskKey = (workspaceId, projectId) => `${workspaceId}:${projectId}`;
@@ -22,6 +22,7 @@ export default function ProjectDetailPage() {
   const [editing, setEditing] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [moveError, setMoveError] = useState('');
   const [filters, setFilters] = useState({ status: '', priority: '', assignee: '' });
   const tasks = tasksByProject[taskKey(workspaceId, projectId)] || [];
   const canAssign = role === 'OWNER' || role === 'ADMIN';
@@ -53,6 +54,18 @@ export default function ProjectDetailPage() {
   const removeTask = async (task) => {
     if (window.confirm(`Delete ${task.title}?`)) {
       await dispatch(deleteTask({ workspaceId, projectId, taskId: task._id }));
+    }
+  };
+
+  const moveTask = async (task, toStatus) => {
+    const moveId = `${task._id}-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    setMoveError('');
+    dispatch(taskStatusMoveOptimistic({ workspaceId, projectId, taskId: task._id, fromStatus: task.status, toStatus, moveId }));
+    try {
+      await dispatch(updateTask({ workspaceId, projectId, taskId: task._id, taskData: { status: toStatus }, moveId })).unwrap();
+    } catch (error) {
+      dispatch(taskStatusMoveRolledBack({ workspaceId, projectId, taskId: task._id, moveId }));
+      setMoveError(typeof error === 'string' ? error : 'Unable to move this task. Please try again.');
     }
   };
 
@@ -88,7 +101,8 @@ export default function ProjectDetailPage() {
               </div>
               <div className="p-5 sm:p-6">
                 {taskError && <p className="mb-4 rounded-md border border-rose-100 bg-rose-50 px-3 py-2 text-sm text-rose-700">{taskError}</p>}
-                {taskLoading && !tasks.length ? <p className="py-6 text-center text-sm text-slate-500">Loading tasks…</p> : <TaskList tasks={tasks} members={members} filters={filters} onFiltersChange={setFilters} canManage={canManage} canAssign={canAssign} onOpen={(task) => navigate(`/workspaces/${workspaceId}/projects/${projectId}/tasks/${task._id}`)} onEdit={(task) => { setEditing(task); setShowForm(true); }} onDelete={removeTask} />}
+                {moveError && <p role="alert" className="mb-4 rounded-md border border-rose-100 bg-rose-50 px-3 py-2 text-sm text-rose-700">Task move could not be confirmed: {moveError}. The board reflects any server update received in real time.</p>}
+                {taskLoading && !tasks.length ? <p className="py-6 text-center text-sm text-slate-500">Loading tasks…</p> : <KanbanBoard tasks={tasks} members={members} filters={filters} onFiltersChange={setFilters} canManage={canManage} canAssign={canAssign} onOpen={(task) => navigate(`/workspaces/${workspaceId}/projects/${projectId}/tasks/${task._id}`)} onEdit={(task) => { setEditing(task); setShowForm(true); }} onDelete={removeTask} onMove={moveTask} />}
               </div>
             </section>
           </>
