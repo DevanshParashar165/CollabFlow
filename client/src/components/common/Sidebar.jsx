@@ -92,9 +92,7 @@ export default function Sidebar({
             onClick={closeAfterNavigation}
             className="flex min-w-0 items-center gap-2.5"
           >
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-indigo-600 text-xs font-bold tracking-wide text-white">
-              CF
-            </span>
+            <img src="../src/assets/image.png" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"/>
             <span
               className={`truncate text-[15px] font-semibold tracking-tight text-slate-900 ${compact ? "md:hidden" : ""}`}
             >
