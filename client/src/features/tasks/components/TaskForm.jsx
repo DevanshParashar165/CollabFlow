@@ -1,12 +1,12 @@
 import { useState } from 'react';
+import { TASK_STATUSES } from '../../../utils/constants';
 
-const statuses = ['TODO', 'IN_PROGRESS', 'IN_REVIEW', 'DONE'];
 const priorities = ['LOW', 'MEDIUM', 'HIGH', 'URGENT'];
 
 export default function TaskForm({ initialTask, members, canAssign, onSubmit, onCancel, submitting }) {
   const [form, setForm] = useState({
     title: initialTask?.title || '', description: initialTask?.description || '',
-    status: initialTask?.status || 'TODO', priority: initialTask?.priority || 'MEDIUM',
+    status: initialTask?.status || TASK_STATUSES[0].value, priority: initialTask?.priority || 'MEDIUM',
     assignee: initialTask?.assignee?._id || initialTask?.assignee || '', dueDate: initialTask?.dueDate ? initialTask.dueDate.slice(0, 10) : '',
   });
   const update = (field, value) => setForm((current) => ({ ...current, [field]: value }));
@@ -16,7 +16,7 @@ export default function TaskForm({ initialTask, members, canAssign, onSubmit, on
       <input value={form.title} onChange={(e) => update('title', e.target.value)} placeholder="Task title" maxLength={150} required className={fieldClass} />
       <textarea value={form.description} onChange={(e) => update('description', e.target.value)} placeholder="Description" maxLength={2000} rows={4} className={`${fieldClass} resize-y`} />
       <div className="grid grid-cols-2 gap-3">
-        <select value={form.status} onChange={(e) => update('status', e.target.value)} className={fieldClass}>{statuses.map((status) => <option key={status}>{status}</option>)}</select>
+        <select value={form.status} onChange={(e) => update('status', e.target.value)} className={fieldClass}>{TASK_STATUSES.map(({ value, label }) => <option key={value} value={value}>{label}</option>)}</select>
         <select value={form.priority} onChange={(e) => update('priority', e.target.value)} className={fieldClass}>{priorities.map((priority) => <option key={priority}>{priority}</option>)}</select>
       </div>
       <input type="date" value={form.dueDate} onChange={(e) => update('dueDate', e.target.value)} className={fieldClass} />

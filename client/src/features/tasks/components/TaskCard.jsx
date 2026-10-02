@@ -5,15 +5,14 @@ const priorityStyles = {
   URGENT: 'border-rose-100 bg-rose-50 text-rose-700',
 };
 
-export default function TaskCard({ task, canManage, canAssign, onOpen, onEdit, onDelete, dragHandle, className = '' }) {
+export default function TaskCard({ task, canManage, canAssign, onOpen, onEdit, onDelete, className = '' }) {
   const priority = task.priority?.toUpperCase();
   const priorityStyle = priorityStyles[priority] || priorityStyles.MEDIUM;
 
   return (
     <article className={`rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition-shadow hover:border-indigo-200 hover:shadow-md ${className}`}>
       <div className="flex items-start justify-between gap-3">
-        <div className="flex min-w-0 items-start gap-2">
-          {canManage && dragHandle}
+        <div className="flex min-w-0 items-start">
           <button type="button" onClick={onOpen} className="min-w-0 text-left text-sm font-semibold text-slate-900 hover:text-indigo-700 cursor-pointer">
             {task.title}
           </button>
