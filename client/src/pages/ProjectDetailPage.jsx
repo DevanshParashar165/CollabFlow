@@ -3,10 +3,11 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
 import { fetchMembers, fetchWorkspace } from '../features/workspaces/workspaceSlice';
 import { clearCurrentProject, fetchProject } from '../features/projects/projectSlice';
-import { createTask, deleteTask, fetchTasks, updateTask } from '../features/tasks/taskSlice';
+import { createTask, deleteTask, fetchTasks, taskStatusMoveOptimistic, taskStatusMoveRolledBack, updateTask } from '../features/tasks/taskSlice';
 import TaskForm from '../features/tasks/components/TaskForm';
 import KanbanBoard from '../features/tasks/components/kanban/KanbanBoard';
 import useWorkspaceSocket from '../hooks/useWorkspaceSocket';
+import { TASK_STATUSES } from '../utils/constants';
 
 const taskKey = (workspaceId, projectId) => `${workspaceId}:${projectId}`;
 
@@ -22,7 +23,8 @@ export default function ProjectDetailPage() {
   const [editing, setEditing] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [filters, setFilters] = useState({ status: '', priority: '', assignee: '' });
+  const [moveError, setMoveError] = useState('');
+  const [filters, setFilters] = useState({ search: '', status: '', priority: '', assignee: '' });
   const tasks = tasksByProject[taskKey(workspaceId, projectId)] || [];
   const canAssign = role === 'OWNER' || role === 'ADMIN';
   const canManage = role === 'OWNER' || role === 'ADMIN' || role === 'MEMBER';
@@ -53,6 +55,20 @@ export default function ProjectDetailPage() {
   const removeTask = async (task) => {
     if (window.confirm(`Delete ${task.title}?`)) {
       await dispatch(deleteTask({ workspaceId, projectId, taskId: task._id }));
+    }
+  };
+
+  const moveTask = async (task, toStatus) => {
+    if (!canManage || !TASK_STATUSES.some(({ value }) => value === task.status) || !TASK_STATUSES.some(({ value }) => value === toStatus) || task.status === toStatus) return;
+
+    const moveId = `${task._id}-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    setMoveError('');
+    dispatch(taskStatusMoveOptimistic({ workspaceId, projectId, taskId: task._id, fromStatus: task.status, toStatus, moveId }));
+    try {
+      await dispatch(updateTask({ workspaceId, projectId, taskId: task._id, taskData: { status: toStatus }, moveId })).unwrap();
+    } catch (error) {
+      dispatch(taskStatusMoveRolledBack({ workspaceId, projectId, taskId: task._id, moveId }));
+      setMoveError(typeof error === 'string' ? error : error?.message || 'Please try again.');
     }
   };
 
@@ -88,7 +104,8 @@ export default function ProjectDetailPage() {
               </div>
               <div className="p-5 sm:p-6">
                 {taskError && <p className="mb-4 rounded-md border border-rose-100 bg-rose-50 px-3 py-2 text-sm text-rose-700">{taskError}</p>}
-                {taskLoading && !tasks.length ? <p className="py-6 text-center text-sm text-slate-500">Loading tasks…</p> : <KanbanBoard tasks={tasks} members={members} filters={filters} onFiltersChange={setFilters} canManage={canManage} canAssign={canAssign} onOpen={(task) => navigate(`/workspaces/${workspaceId}/projects/${projectId}/tasks/${task._id}`)} onEdit={(task) => { setEditing(task); setShowForm(true); }} onDelete={removeTask} />}
+                {moveError && <p role="alert" className="mb-4 rounded-md border border-rose-100 bg-rose-50 px-3 py-2 text-sm text-rose-700">Task status could not be updated: {moveError}</p>}
+                {taskLoading && !tasks.length ? <p className="py-6 text-center text-sm text-slate-500">Loading tasks…</p> : <KanbanBoard tasks={tasks} members={members} filters={filters} onFiltersChange={setFilters} canManage={canManage} canAssign={canAssign} onOpen={(task) => navigate(`/workspaces/${workspaceId}/projects/${projectId}/tasks/${task._id}`)} onEdit={(task) => { setEditing(task); setShowForm(true); }} onDelete={removeTask} onMove={moveTask} />}
               </div>
             </section>
           </>

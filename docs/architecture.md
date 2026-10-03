@@ -104,6 +104,11 @@ client/src/
 └── utils/           # Shared constants, helpers, and validators
 ```
 
+#### Kanban task ordering
+- The board filters the Redux task list and then groups the filtered tasks by the existing status values. Dragging a card to another status uses the existing task update API with an optimistic Redux update and rollback on failure.
+- Task documents and APIs do not currently define a position/order field. Columns therefore preserve the task list order returned by the API (currently newest-created first); drag-and-drop changes status only and does not persist within-column reordering.
+- Task status socket events update the task slice directly, so connected boards move changed tasks without refetching the project or task list.
+
 ### 3.3 Backend Modular Architecture
 The backend codebase follows a layered modular structure:
 
