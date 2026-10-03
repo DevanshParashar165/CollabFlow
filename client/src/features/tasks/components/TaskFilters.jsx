@@ -6,6 +6,14 @@ export default function TaskFilters({ filters, members, onChange }) {
 
   return (
     <div className="mb-4 flex flex-wrap gap-2" aria-label="Task filters">
+      <input
+        type="search"
+        aria-label="Search tasks"
+        placeholder="Search tasks…"
+        value={filters.search || ''}
+        onChange={(event) => set('search', event.target.value)}
+        className={`${controlClass} min-w-48 flex-1 sm:flex-none`}
+      />
       <select aria-label="Filter by status" value={filters.status} onChange={(event) => set('status', event.target.value)} className={controlClass}>
         <option value="">All statuses</option>
         {TASK_STATUSES.map(({ value, label }) => <option key={value} value={value}>{label}</option>)}

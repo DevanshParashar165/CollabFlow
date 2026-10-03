@@ -5,15 +5,16 @@ const priorityStyles = {
   URGENT: 'border-rose-100 bg-rose-50 text-rose-700',
 };
 
-export default function TaskCard({ task, canManage, canAssign, onOpen, onEdit, onDelete, className = '' }) {
+export default function TaskCard({ task, canManage, canAssign, onOpen, onEdit, onDelete, dragHandle, className = '' }) {
   const priority = task.priority?.toUpperCase();
   const priorityStyle = priorityStyles[priority] || priorityStyles.MEDIUM;
 
   return (
     <article className={`rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition-shadow hover:border-indigo-200 hover:shadow-md ${className}`}>
       <div className="flex items-start justify-between gap-3">
-        <div className="flex min-w-0 items-start">
-          <button type="button" onClick={onOpen} className="min-w-0 text-left text-sm font-semibold text-slate-900 hover:text-indigo-700 cursor-pointer">
+        <div className="flex min-w-0 items-start gap-2">
+          {canManage && dragHandle}
+          <button type="button" onClick={onOpen} className="min-w-0 cursor-pointer text-left text-sm font-semibold text-slate-900 hover:text-indigo-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2">
             {task.title}
           </button>
         </div>
@@ -37,8 +38,8 @@ export default function TaskCard({ task, canManage, canAssign, onOpen, onEdit, o
       </div>
       {canManage && (
         <div className="mt-3 flex gap-4 border-t border-slate-100 pt-3">
-          <button type="button" onClick={onEdit} className="cursor-pointer text-xs font-medium text-indigo-700 hover:text-indigo-800">Edit</button>
-          {canAssign && <button type="button" onClick={onDelete} className="cursor-pointer text-xs font-medium text-rose-600 hover:text-rose-700">Delete</button>}
+          <button type="button" onClick={onEdit} className="cursor-pointer text-xs font-medium text-indigo-700 hover:text-indigo-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2">Edit</button>
+          {canAssign && <button type="button" onClick={onDelete} className="cursor-pointer text-xs font-medium text-rose-600 hover:text-rose-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2">Delete</button>}
         </div>
       )}
     </article>
