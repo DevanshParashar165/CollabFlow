@@ -6,9 +6,12 @@ import environment from './config/environment.js';
 import connectDB from './config/db.js';
 import { initSocket } from './sockets/index.js';
 import logger from './utils/logger.js';
+import { logAiProviderConfiguration } from './services/aiService.js';
 
 // Create HTTP server
 const server = http.createServer(app);
+
+logAiProviderConfiguration({ log: logger });
 
 // Initialize Socket.IO
 initSocket(server);
